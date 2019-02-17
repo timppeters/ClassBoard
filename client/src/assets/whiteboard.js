@@ -20,6 +20,7 @@ export default class Whiteboard {
         this.history = [];
 
         //this.listen();
+        //Test
     }
 
     render() {
