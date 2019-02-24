@@ -18,6 +18,7 @@ export default {
 <style lang="scss" scoped>
 
 .room {
+  height: 100%;
 }
 
 </style>

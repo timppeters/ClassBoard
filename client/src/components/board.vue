@@ -6,6 +6,7 @@
 
 <script>
 import Whiteboard from "../assets/whiteboard.js";
+import "../assets/canvas2svg.js";
 
 export default {
   name: 'board',
@@ -34,8 +35,14 @@ export default {
 
 .board {
   overflow: hidden;
+  height: 100%;
   #main {
     cursor: crosshair;
+  }
+  canvas {
+    background: url('../assets/dot.svg') repeat;
+    background-size: 36px 36px;
+    touch-action: none;
   }
 }
 
