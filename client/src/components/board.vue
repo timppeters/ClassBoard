@@ -5,8 +5,7 @@
 </template>
 
 <script>
-import Whiteboard from "../assets/whiteboard.js";
-import "../assets/canvas2svg.js";
+import {fabric} from 'fabric';
 
 export default {
   name: 'board',
@@ -15,7 +14,7 @@ export default {
   },
   data() {
     return {
-      like: 3
+      like: 3,
     }
   },
   methods: {
@@ -25,7 +24,33 @@ export default {
 
   }*/,
   mounted() {
-    let whiteboard = new Whiteboard('main');
+    let canvas = new fabric.Canvas('main', {
+      rotationCursor: 'pointer'
+    });
+
+
+    //Drawing object
+    let ctx = canvas.getContext('2d');
+
+    let rect = new fabric.Rect();
+
+    canvas.add(rect); // add object
+
+    canvas.item(0); // reference fabric.Rect added earlier (first object)
+    canvas.getObjects(); // get all objects on canvas (rect will be first and only)
+
+    let text = new fabric.IText('hello world', { left: 100, top: 100 });
+
+    fabric.Object.prototype.set({
+      transparentCorners: false,
+      cornerColor: 'black',
+      borderColor: 'grey',
+      cornerSize: 6,
+      padding: 7,
+      borderDashArray: [2, 2]
+    });
+
+    canvas.add(text);
   }
 }
 </script>
@@ -42,7 +67,7 @@ export default {
   canvas {
     background: url('../assets/dot.svg') repeat;
     background-size: 36px 36px;
-    touch-action: none;
+    //touch-action: none;
   }
 }
 
