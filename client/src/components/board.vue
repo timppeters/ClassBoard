@@ -36,13 +36,9 @@ export default {
 .board {
   overflow: hidden;
   height: 100%;
-  #main {
-    cursor: crosshair;
-  }
   canvas {
     background: url('../assets/dot.svg') repeat;
     background-size: 36px 36px;
-    //touch-action: none;
   }
 }
 
