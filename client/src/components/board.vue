@@ -6,6 +6,7 @@
 
 <script>
 import {fabric} from 'fabric';
+import initiateCanvas from '../assets/whiteboard_helper.js';
 
 export default {
   name: 'board',
@@ -24,33 +25,7 @@ export default {
 
   }*/,
   mounted() {
-    let canvas = new fabric.Canvas('main', {
-      rotationCursor: 'pointer'
-    });
-
-
-    //Drawing object
-    let ctx = canvas.getContext('2d');
-
-    let rect = new fabric.Rect();
-
-    canvas.add(rect); // add object
-
-    canvas.item(0); // reference fabric.Rect added earlier (first object)
-    canvas.getObjects(); // get all objects on canvas (rect will be first and only)
-
-    let text = new fabric.IText('hello world', { left: 100, top: 100 });
-
-    fabric.Object.prototype.set({
-      transparentCorners: false,
-      cornerColor: 'black',
-      borderColor: 'grey',
-      cornerSize: 6,
-      padding: 7,
-      borderDashArray: [2, 2]
-    });
-
-    canvas.add(text);
+    initiateCanvas('main');
   }
 }
 </script>
