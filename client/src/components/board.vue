@@ -1,6 +1,9 @@
 <template>
   <div class="board">
     <canvas id="main"></canvas>
+    <div class="sidebar">
+      <div class="sidebar-button" v-for="(value, key) in tools" :id='key' :key="key"></div>
+    </div>
   </div>
 </template>
 
@@ -16,6 +19,38 @@ export default {
   data() {
     return {
       like: 3,
+      tools: {
+        undo: {
+
+        },
+        select: {
+
+        },
+        pen: {
+          size: 2,
+          colour: 'black'
+        },
+        colour: {
+          selected: 'black',
+          colours: ['black', 'blue', 'red', 'orange', 'yellow', 'green', 'purple']
+        },
+        eraser: {
+          type: 'stroke',
+          size: 4,
+        },
+        text: {
+
+        },
+        shape: {
+          shapes: ['rectangle', 'line', 'triangle', 'star', 'circle']
+        },
+        extra: {
+          extras: ['img']
+        },
+        delete: {
+
+        }
+      }
     }
   },
   methods: {
@@ -39,6 +74,18 @@ export default {
   canvas {
     background: url('../assets/dot.svg') repeat;
     background-size: 36px 36px;
+  }
+
+  .sidebar {
+    position: absolute;
+    top: 10rem;
+    right: 3rem;
+
+    .sidebar-button {
+      height: 10px;
+      width: 10px;
+      background-color: black;
+    }
   }
 }
 

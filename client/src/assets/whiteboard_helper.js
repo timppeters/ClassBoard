@@ -112,7 +112,7 @@ export default function initiateCanvas(id) {
           // delete e.target object
         //}
         //send drawing command to socket
-        canvas.freeDrawingBrush.width = Math.round(e.pressure * 5);
+        //canvas.freeDrawingBrush.width = Math.round(e.pressure * 5);
       }
       else if (e.pointerType == 'mouse') {
         if (canvas.isDrawingMode) { 
