@@ -66,20 +66,22 @@ export default function initiateCanvas(id) {
         if (e.button == 0) { // Pen contact
           if (canvas.getActiveObjects().length == 0) {
             canvas.isDrawingMode = true;
+            //app.$room.$board.selectedTool = 'colour'; -- switch to pen tool
+            // add other tools
           }
         }
         else if (e.button == 5) { // eraser button/end of stylus
           //switch to eraser tool
         }
         else { // barrel button
-          // Selection box
+          // Selection box -- switch to selection tool
         }
         
       }
       else if (e.pointerType == 'mouse') {
-        if (false) { //board.toolSelected
+        if (false) { //board.toolSelected = pen
           canvas.isDrawingMode = true;
-        }
+        } // add other tools
         else if (e.altKey) {// alt key pressed
           canvas.isDragging = true;
           canvas.selection = false;
@@ -117,6 +119,7 @@ export default function initiateCanvas(id) {
       else if (e.pointerType == 'mouse') {
         if (canvas.isDrawingMode) { 
           //send drawing command to socket
+          // pen or eraser
         }
         if (e.altKey && canvas.isDragging) {
           canvas.viewportTransform[4] += e.clientX - canvas.lastPosX;
@@ -169,8 +172,8 @@ export default function initiateCanvas(id) {
       e.preventDefault();
     });
 
-    let text = new fabric.IText('hello world', { left: 100, top: 100});
-    let text2 = new fabric.IText('hello world2', { left: 20, top: 100});
+    let text = new fabric.IText('hello world', { left: 400, top: 400});
+    let text2 = new fabric.IText('hello world2', { left: 620, top: 400});
 
     // Only let paths be selectable in a group (deselects them if they are selected by themselves)
     /*canvas.on('selection:created', e => {

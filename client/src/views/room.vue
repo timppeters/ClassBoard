@@ -1,6 +1,6 @@
 <template>
   <div class="room">
-    <board></board>
+    <board ref='board'></board>
   </div>
 </template>
 
