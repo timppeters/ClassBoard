@@ -66,7 +66,7 @@ export default function initiateCanvas(id) {
         if (e.button == 0) { // Pen contact
           if (canvas.getActiveObjects().length == 0) {
             canvas.isDrawingMode = true;
-            //app.$room.$board.selectedTool = 'colour'; -- switch to pen tool
+            this.selectedTool = 'colour'; //-- switch to pen tool
             // add other tools
           }
         }
@@ -88,6 +88,7 @@ export default function initiateCanvas(id) {
           canvas.lastPosX = e.clientX;
           canvas.lastPosY = e.clientY; 
         }
+        this.board.selectedTool = 'colour';
       }
       else { // touch (dragging)
         
@@ -179,7 +180,7 @@ export default function initiateCanvas(id) {
     /*canvas.on('selection:created', e => {
       if (e.selected.length == 1) {
         if (canvas.getActiveObject().get('type') == 'path') {
-          canvas.discardActiveObject();
+          canvas.discardActiveObject(); 
         }
       } 
     });*/
