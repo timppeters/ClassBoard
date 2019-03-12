@@ -92,8 +92,10 @@ export default {
           //isDrawingMode: true,
           selectionFullyContained: true,
           width: window.innerWidth,
-          height: window.innerHeight
+          height: window.innerHeight,
+          stopContextMenu: true
         });
+      canvas.freeDrawingBrush.width = 4;
   
       // Set default object settings
       fabric.Object.prototype.set({
@@ -144,7 +146,6 @@ export default {
   
       // set up pointer event listeners to identify pen/mouse/touch
       fabric.util.addListener(canvas.upperCanvasEl, 'pointerdown', e => {
-  
         if (e.pointerType == 'pen') {
           if (e.button == 0) { // Pen contact
             if (canvas.getActiveObjects().length == 0) {
@@ -194,7 +195,6 @@ export default {
         //fabric.PencilBrush._render - stroke in for statement & ctx.strokeWidth = point.width
         //maybe fabric.PencilBrush.convertPointsToSVGPath add width
         // createPath && _finalizeAndAddPath
-  
         
         if (e.pointerType == 'pen') {
           //if tool == eraser {
@@ -255,9 +255,7 @@ export default {
         }
       });
   
-      fabric.util.addListener(canvas.upperCanvasEl, 'contextmenu', e => {
-        e.preventDefault();
-      });
+      
   
       let text = new fabric.IText('hello world', { left: 400, top: 400});
       let text2 = new fabric.IText('hello world2', { left: 620, top: 400});
