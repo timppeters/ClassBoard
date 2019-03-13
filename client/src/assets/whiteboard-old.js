@@ -1,4 +1,4 @@
-export default class Whiteboard {
+export default class Whiteboard { 
 
     constructor(id) {
         this.canvas = document.getElementById(id);
@@ -74,83 +74,6 @@ export default class Whiteboard {
         }
     }
 
-    vectorise() {
-        let mockCtx = new C2S(this.canvas.width, this.canvas.height);
-        let dx;
-        let dy;
-
-        let line = this.history[this.history.length-1];
-        let length = Object.keys(line).length;
-        let prevMidpoint;
-        
-        for (let j = 0; j < length; j++) { // j = dot object
-
-            let dot = line[j];
-            let prevDot = line[j-1];
-            mockCtx.beginPath();
-
-            
-
-            if (j && dot.dragging) {
-
-                let midpoint = {
-                    x: Math.floor((prevDot.x + dot.x)/2),
-                    y: Math.floor((prevDot.y + dot.y)/2)
-                }
-                
-                mockCtx.moveTo(prevMidpoint.x, prevMidpoint.y);
-                mockCtx.quadraticCurveTo(prevDot.x, prevDot.y, midpoint.x, midpoint.y);
-
-                prevMidpoint = midpoint;
-                if (dot.x < dx) {
-                    dx = dot.x;
-                }
-
-                if (dot.y < dy) {
-                    dy = dot.y;
-                }
-            }
-            else { //first point
-                mockCtx.moveTo(dot.x - 1, dot.y);
-                mockCtx.lineTo(dot.x, dot.y);
-                prevMidpoint = {
-                    x: dot.x -1,
-                    y: dot.y
-                }
-                dx = dot.x-1;
-                dy = dot.y;
-            }
-
-            mockCtx.lineCap = 'round';
-            mockCtx.lineJoin= 'round';
-            mockCtx.strokeStyle = dot.strokeStyle;
-            mockCtx.lineWidth = dot.lineWidth;
-            mockCtx.stroke();
-
-        }
-
-
-        mockCtx.closePath();
-        let svg = mockCtx.getSvg();
-        let paths = Array.from(svg.querySelectorAll("path"));
-        let path = "";
-        for (let i = 0; i < paths.length; i++) {
-            if (i > 0) {
-                let data = paths[i].attributes[3].value;
-                let pattern = /\s[^M]\s[0-9]+\s[0-9]+\s[0-9]+\s[0-9]+/;
-                path += data.match(pattern);
-            }
-            else {
-                path += paths[i].attributes[3].value;
-            }
-        }
-        console.log(path);
-        let img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        img.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", svg);
-        this.ctx.drawImage(img, 0, 0);
-        
-    }
-
     draw() {
 
         if (this.history.length > 0) {
@@ -203,7 +126,7 @@ export default class Whiteboard {
         this.canvas.addEventListener((this.isMobile ? 'touchstart' : 'pointerdown'), e => {
             e.preventDefault(); // Stop scrolling on mobile
 
-            let cursorPos = this.getCursorPos(e);
+            let cursorPos = this.getCursorPos(e,canvas);
             this.history.push(new Object);
             this.mouseDown = true;
             this.addPointDraw(cursorPos.x, cursorPos.y, false);
@@ -225,7 +148,7 @@ export default class Whiteboard {
 
         this.canvas.addEventListener((this.isMobile ? 'touchmove' : 'pointermove'), e => {
             if (this.mouseDown) {
-                let cursorPos = this.getCursorPos(e);
+                let cursorPos = this.getCursorPos(e,canvas);
                 this.addPointDraw(cursorPos.x, cursorPos.y, true);
             }
             
