@@ -128,7 +128,7 @@ export const whiteboard = {
                         canvas.selection = false;
                         this.scaleDrawingCanvas(canvas,ctx);
 
-                        let cursorPos = this.getCursorPos(e);
+                        let cursorPos = this.getCursorPos(e,canvas);
 
                         this.points.push(new Object);
                         this.addPoint(cursorPos.x, cursorPos.y, false, ctx);
@@ -161,7 +161,7 @@ export const whiteboard = {
                       canvas.selection = false;
                       this.scaleDrawingCanvas(canvas,ctx);
 
-                      let cursorPos = this.getCursorPos(e);
+                      let cursorPos = this.getCursorPos(e,canvas);
   
                       this.points.push(new Object);
                       this.addPoint(cursorPos.x, cursorPos.y, false, ctx);
@@ -203,11 +203,11 @@ export const whiteboard = {
                 //canvas.freeDrawingBrush.width = Math.round(e.pressure * 5);
                 if (this.mouseDown) {
                   if (this.selectedTool == 'pen') {
-                    let cursorPos = this.getCursorPos(e);
+                    let cursorPos = this.getCursorPos(e,canvas);
                     this.addPoint(cursorPos.x, cursorPos.y, true, ctx);
                   }
                   else if (this.selectedTool == 'eraser') {
-
+                    //
                   }
                   else { //other tools
 
@@ -220,11 +220,11 @@ export const whiteboard = {
                   if (this.selectedTool == 'pen') {
                       //send drawing command to socket
                       // pen or eraser
-                      let cursorPos = this.getCursorPos(e);
+                      let cursorPos = this.getCursorPos(e,canvas);
                       this.addPoint(cursorPos.x, cursorPos.y, true, ctx);
                   }
                   else if (this.selectedTool == 'eraser') {
-
+                      //
                   }
                   else { //other tools
 
@@ -370,12 +370,12 @@ export const whiteboard = {
         },
     
         // Handles cursor position for different pointers
-        getCursorPos(event) {
+        getCursorPos(event, canvas) {
             let mouseX, mouseY;
 
             if (event.pointerType == 'mouse' || event.pointerType == 'pen') {
-                mouseX = event.pageX;
-                mouseY = event.pageY;
+                mouseX = event.pageX;// - canvas.viewportTransform[4];
+                mouseY = event.pageY;// - canvas.viewportTransform[5];
             }
             else { // touch
                 mouseX = event.touches[0].clientX;
@@ -389,7 +389,17 @@ export const whiteboard = {
             
         },
 
+        adjustPointsforDrag(canvas) { // Changes the coordinates to adjust for the dragging of the canvas so the svg will be put in the correct location
+          let length = this.points.length;
+          for (let i = 0; i < length; i++) {
+            this.points[i].x -= canvas.viewportTransform[4];
+            this.points[i].y -= canvas.viewportTransform[5];
+          }
+
+        },
+
         finalisePath(canvas, ctx) {
+          this.adjustPointsforDrag(canvas);
           let pathData = fabric.PencilBrush.prototype.convertPointsToSVGPath(this.points).join('');
           if (pathData === 'M 0 0 Q 0 0 0 0 L 0 0') {
             // do not create 0 width/height paths, as they are
