@@ -28,17 +28,31 @@
       <div class="sidebar-button" id="undo"><img :src="require('../assets/img/sidebar/undo.svg')" alt=""></div>
     </div>
     <div class="sidebar" id="sidebar-bottom">
-      <div class="sidebar-button" v-for="(value, key) in tools" :id='key' :key="key">
-        <img :src="require('../assets/img/sidebar/'+key+'.svg')" v-bind:class="{selected : selectedTool==key}" v-on:click="selectedTool=key" alt="">
+      <div class="sidebar-button" v-for="(value, key) in tools" :id="key" :key="key">
+        <img :src="require('../assets/img/sidebar/'+key+'.svg')" v-bind:class="{selected : selectedTool==key}" v-on:click="selectedTool=key; showToolOptions(key)" alt="">
+      </div>
+      <div class="sidebar-button-options" id="pen-options" v-if="tools.pen.showOptions">
+        <div>{{this.tools.pen.size}}</div>
+        <input type="range" min="1" max="20" value="4" class="slider" v-model="tools.pen.size">
+      </div>
+      <div class="sidebar-button-options" id="colour-options"  v-if="tools.colour.showOptions">
+        <div class="colour" v-for="(value) in tools.colour.colours" :key="value">
+          <input type="radio" name="colour" :value="value" :id="value+'-input'" :checked="tools.colour.selected==value" v-on:click="tools.colour.selected = value">
+          <label :for="value+'-input'"><span class="radio" :id="value"></span></label>
+        </div>
+      </div>
+      <div class="sidebar-button-options" id="shape-options"  v-if="tools.shape.showOptions">
+
+      </div>
+      <div class="sidebar-button-options" id="extra-options"  v-if="tools.extra.showOptions">
+
       </div>
     </div>
   </div>
 </template>
 
 <script>
-//import {fabric} from 'fabric';
-//import initiateCanvas from '../assets/whiteboard_helper.js';
-import {whiteboard} from '../mixins/whiteboard-own-drawing.js';
+import {whiteboard} from '../mixins/whiteboard.js';
 
 export default {
   name: 'board',
@@ -55,29 +69,30 @@ export default {
           
         },
         pen: {
-          size: 2,
-          colour: 'black'
-          
+          size: 4,
+          showOptions: false
         },
         colour: {
           selected: 'black',
-          colours: ['black', 'blue', 'red', 'orange', 'yellow', 'green', 'purple']
+          colours: ['black', 'blue', 'red', 'green', 'yellow', 'orange', 'purple'],
+          //colours: ['#000000', '#065ea5', '#a50606', '#f77f00', '#f7de00', '#0c9627', '#8a0b96'], -- not in same order
+          showOptions: false
           
         },
         eraser: {
-          type: 'stroke',
-          size: 4
           
         },
         text: {
           
         },
         shape: {
-          shapes: ['rectangle', 'line', 'triangle', 'star', 'circle']
+          shapes: ['rectangle', 'line', 'triangle', 'star', 'circle'],
+          showOptions: false
           
         },
         extra: {
-          extras: ['img']
+          extras: ['img'],
+          showOptions: false
 
         },
         delete: {
@@ -87,6 +102,22 @@ export default {
     }
   },
   methods: {
+    showToolOptions(key) {
+      this.hideToolOptions(); // close all other tool option menus
+      if (['pen','colour','shape','extra'].includes(key)) { // If tool has options menu
+        this.tools[key].showOptions = true;
+         // Show options menu
+      }
+    },
+
+    hideToolOptions() { // Close all tool option menus
+      for (let i = 0; i < Object.keys(this.tools).length; i++) {
+        let tool = Object.keys(this.tools)[i];
+        if (['pen','colour','shape','extra'].includes(tool)) {
+          this.tools[tool].showOptions = false;
+        }
+      }
+    }
     
   }/*,
   sockets: {
@@ -287,6 +318,129 @@ export default {
         }
       }
       
+    }
+
+    #pen-options {
+      top: 4rem;
+      grid-template-columns: 1fr 1fr 1fr;
+
+      button, div {
+        padding: 0.5rem;
+      }
+    }
+
+    #colour-options {
+      top: 8rem;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 2fr;
+      row-gap: 40%;
+      padding: 1rem 1rem 1rem 0;
+      
+
+      .colour {
+        margin-right: 0.2rem;
+
+        input {
+          display: none;
+        }
+
+        label {
+          position: relative;
+          margin: 1.5rem;
+
+          span {
+
+          &.radio {
+
+            &:hover {
+              cursor: pointer;
+            }
+
+            &#black {
+              &::before {
+                background-color: black;
+              }
+            }
+
+            &#blue {
+              &::before {
+                background-color: blue;
+              }
+            }
+
+            &#red {
+              &::before {
+                background-color: red;
+              }
+            }
+
+            &#green {
+              &::before {
+                background-color: green;
+              }
+            }
+
+            &#yellow {
+              &::before {
+                background-color: yellow;
+              }
+            }
+
+            &#orange {
+              &::before {
+                background-color: orange;
+              }
+            }
+
+            &#purple {
+              &::before {
+                background-color: purple;
+              }
+            }
+
+            &::before {
+              width: 1.5rem;
+              height: 1.5rem;
+              border-radius: 1.5rem;
+              background-color: black;
+            }
+
+          }
+
+          &::before, ::after {
+            content: '';
+            position: absolute;
+            padding: 0.2rem;
+          }
+        }
+        }
+
+        input:checked + label span.radio::before {
+          box-shadow: 0px 0px 0px 0.2rem grey;
+        }
+
+      }
+      
+
+      
+    }
+
+    #shape-options {
+      top: 19rem;
+    }
+
+    #extra-options {
+      top: 22.7rem;
+    }
+
+    .sidebar-button-options {
+      position: absolute;
+      right: 4rem;
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      box-shadow: 0px 1px 15px rgba(0,0,0,0.3);
+      display: grid;
     }
   }
 }

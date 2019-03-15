@@ -1,11 +1,21 @@
 import {fabric} from 'fabric';
 
 export const whiteboard = {
+    data() {
+        return {
+            points: [],
+            prevMidpoint: {},
+            mouseDown: false
+        }
+    },
     methods: {
         initialiseCanvas(id) {
             
             let canvas = this.init(id);
-            this.listen(canvas);
+
+            let ctx = canvas.contextTop;
+
+            this.listen(canvas, ctx);
             
             let text = new fabric.IText('hello world', { left: 400, top: 400});
             let text2 = new fabric.IText('hello world2', { left: 620, top: 400});
@@ -34,9 +44,10 @@ export const whiteboard = {
                 selectionFullyContained: true,
                 width: window.innerWidth,
                 height: window.innerHeight,
-                stopContextMenu: true
+                stopContextMenu: true,
+                enableRetinaScaling: true
               });
-            canvas.freeDrawingBrush.width = 4;
+
         
             // Set default object settings
             fabric.Object.prototype.set({
@@ -53,11 +64,13 @@ export const whiteboard = {
               perPixelTargetFind: true
             });
 
+            fabric.Point.prototype.dragging = false;
+
             return canvas;
 
         },
 
-        listen(canvas) {
+        listen(canvas, ctx) {
 
             canvas.on('mouse:wheel', function(options) {
                 let event = options.e;
@@ -76,16 +89,27 @@ export const whiteboard = {
         
             // When drawing, only use drawing cursor.
             fabric.util.addListener(canvas.upperCanvasEl, 'pointerover', e => {
-              if (e.pointerType == 'pen' || e.pointerType == 'mouse') {
-                if (canvas.getActiveObjects().length == 0) {
-                  fabric.Object.prototype.set({
-                    hoverCursor: 'default'
-                  });
+              if (this.selectedTool == 'pen') {
+                if (e.pointerType == 'pen' || e.pointerType == 'mouse') {
+                  if (canvas.getActiveObjects().length == 0) {
+                    fabric.Object.prototype.set({
+                      hoverCursor: 'default'
+                    });
+                  }
+                  else {
+                    fabric.Object.prototype.set({
+                      hoverCursor: 'move'
+                    });
+                  }
                 }
-                else {
-                  fabric.Object.prototype.set({
-                    hoverCursor: 'move'
-                  });
+              }
+
+            });
+
+            canvas.on('mouse:over', e => { // Stroke eraser
+              if (this.selectedTool == 'eraser') {
+                if (this.mouseDown) {
+                    canvas.remove(e.target);
                 }
               }
             });
@@ -93,16 +117,36 @@ export const whiteboard = {
         
             // set up pointer event listeners to identify pen/mouse/touch
             fabric.util.addListener(canvas.upperCanvasEl, 'pointerdown', e => {
+              this.hideToolOptions(); // Hide tool option menus
+
               if (e.pointerType == 'pen') {
                 if (e.button == 0) { // Pen contact
                   if (canvas.getActiveObjects().length == 0) {
-                    canvas.isDrawingMode = true;
-                    this.selectedTool = 'pen'; //-- switch to pen tool
-                    // add other tools
+                    if (this.selectedTool == 'pen') {
+                        this.mouseDown = true;
+                        canvas.selection = false;
+                        this.scaleDrawingCanvas(canvas,ctx);
+
+                        let cursorPos = this.getCursorPos(e);
+
+                        this.points.push(new Object);
+                        this.addPoint(cursorPos.x, cursorPos.y, false, ctx);
+                    }
+                    else if (this.selectedTool == 'eraser') {
+                      canvas.selection = false;
+                      this.makeObjectsUnselectable(canvas);
+                      this.mouseDown = true;
+                    }
+                    else {
+                      // selection box
+                    }
                   }
                 }
                 else if (e.button == 5) { // eraser button/end of stylus
-                  //switch to eraser tool
+                    this.mouseDown = true;
+                    canvas.selection = false;
+                    this.makeObjectsUnselectable(canvas);
+                    this.selectedTool = 'eraser';
                 }
                 else { // barrel button
                   // Selection box -- switch to selection tool
@@ -111,10 +155,26 @@ export const whiteboard = {
               }
               else if (e.pointerType == 'mouse') {
                 if (!e.altKey) {
-                  if (this.selectedTool == 'pen') {
-                    canvas.discardActiveObject();
-                    canvas.isDrawingMode = true;
-                  } // add other tools
+                  if (e.button == 0) {
+                    this.mouseDown = true;
+                    if (this.selectedTool == 'pen') {
+                      this.makeObjectsUnselectable(canvas);
+                      canvas.selection = false;
+                      this.scaleDrawingCanvas(canvas,ctx);
+
+                      let cursorPos = this.getCursorPos(e);
+  
+                      this.points.push(new Object);
+                      this.addPoint(cursorPos.x, cursorPos.y, false, ctx);
+                    }
+                    else if (this.selectedTool == 'eraser') {
+                      this.makeObjectsUnselectable(canvas);
+                      canvas.selection = false;
+                    }
+                    else {
+                      // selection box
+                    }
+                  }
                 }
                 else {// alt key pressed
                   canvas.isDragging = true;
@@ -136,12 +196,6 @@ export const whiteboard = {
             });
         
             fabric.util.addListener(canvas.upperCanvasEl, 'pointermove', e => {
-              //fabric.PencilBrush._preapreForDrawing - add point with width value
-              //fabric.Point.prototype add width properties
-              //fabric.PencilBrush._captureDrawingPath - add point with width value
-              //fabric.PencilBrush._render - stroke in for statement & ctx.strokeWidth = point.width
-              //maybe fabric.PencilBrush.convertPointsToSVGPath add width
-              // createPath && _finalizeAndAddPath
               
               if (e.pointerType == 'pen') {
                 //if tool == eraser {
@@ -149,13 +203,36 @@ export const whiteboard = {
                 //}
                 //send drawing command to socket
                 //canvas.freeDrawingBrush.width = Math.round(e.pressure * 5);
+                if (this.mouseDown) {
+                  if (this.selectedTool == 'pen') {
+                    let cursorPos = this.getCursorPos(e);
+                    this.addPoint(cursorPos.x, cursorPos.y, true, ctx);
+                  }
+                  else if (this.selectedTool == 'eraser') {
+                    //
+                  }
+                  else { //other tools
+
+                  }
+                }
+                
               }
               else if (e.pointerType == 'mouse') {
-                if (canvas.isDrawingMode) { 
-                  //send drawing command to socket
-                  // pen or eraser
+                if (this.mouseDown) {
+                  if (this.selectedTool == 'pen') {
+                      //send drawing command to socket
+                      // pen or eraser
+                      let cursorPos = this.getCursorPos(e);
+                      this.addPoint(cursorPos.x, cursorPos.y, true, ctx);
+                  }
+                  else if (this.selectedTool == 'eraser') {
+                      //
+                  }
+                  else { //other tools
+
+                  }
                 }
-                if (e.altKey && canvas.isDragging) {
+                if (e.altKey && canvas.isDragging && this.selectedTool != 'pen') {
                   canvas.viewportTransform[4] += e.clientX - canvas.lastPosX;
                   canvas.viewportTransform[5] += e.clientY - canvas.lastPosY;
                   canvas.requestRenderAll();
@@ -175,19 +252,47 @@ export const whiteboard = {
             });
         
             fabric.util.addListener(canvas.upperCanvasEl, 'pointerup', e => {
-      
+              canvas.selection = true;
+              this.mouseDown = false;
               if (e.pointerType == 'pen') {
-                canvas.isDrawingMode = false;
-                canvas.freeDrawingBrush.onMouseUp(); // Simulate mouse up event to end the path and convert it to an svg
+                if (e.button == 0){
+                  if (this.selectedTool == 'pen') {
+                    this.finalisePath(canvas,ctx);
+                    this.points = [];
+                    this.descaleDrawingCanvas(canvas,ctx);
+                  }
+                  else if (this.selectedTool == 'eraser') {
+                    this.makeObjectsSelectable(canvas);
+                  }
+                  else {
+                    //
+                  }
+                }
+                else if (e.button == 5) {
+                  this.selectedTool = 'pen';
+                  this.makeObjectsSelectable(canvas);
+                }
+                else {
+                  //
+                }
+                
               }
               else if (e.pointerType == 'mouse') {
-                if (canvas.isDrawingMode) { 
-                  canvas.isDrawingMode = false;
-                  canvas.freeDrawingBrush.onMouseUp(); // Simulate mouse up event to end the path and convert it to an svg
+                if (this.selectedTool == 'pen') {
+                  this.finalisePath(canvas, ctx);
+                  this.points = [];
+                  this.descaleDrawingCanvas(canvas,ctx);
                 }
+                else if (this.selectedTool == 'eraser') {
+                  this.makeObjectsSelectable(canvas);
+                }
+                else {
+                  //
+                }
+
+
                 if(canvas.isDragging) {
                   canvas.isDragging = false;
-                  canvas.selection = true;
                   canvas.forEachObject(function(obj) { // reset the coner coordinates after panning so that objects are still selectable
                     obj.setCoords();
                   });
@@ -195,16 +300,180 @@ export const whiteboard = {
               }
               else { // touch (dragging)
                 canvas.isDragging = false;
-                canvas.selection = true;
                 canvas.forEachObject(function(obj) { // reset the coner coordinates after panning so that objects are still selectable
                   obj.setCoords();
                 });
               }
             });
 
+        },
+
+        draw(ctx) {
+
+                let length = this.points.length;
+                let dot = this.points[length-1];
+                let prevDot;
+                if (length > 1) {
+                  prevDot = this.points[length-2];
+                }
+                
+                ctx.beginPath();
+    
+                if (dot.dragging) {
+    
+                    let midpoint = this.getMidpoint(dot, prevDot);
+                    this.roundPixels(prevDot);
+                    this.roundPixels(dot);
+    
+                    ctx.moveTo(this.prevMidpoint.x, this.prevMidpoint.y);
+                    ctx.quadraticCurveTo(prevDot.x, prevDot.y, midpoint.x, midpoint.y);
+                    this.prevMidpoint = midpoint;
+                }
+                else { //first point
+                    ctx.moveTo(dot.x - 1, dot.y);
+                    ctx.lineTo(dot.x, dot.y);
+                    this.prevMidpoint = {
+                        x: dot.x -1,
+                        y: dot.y
+                    }
+                }
+    
+                ctx.lineCap = 'round';
+                ctx.lineJoin= 'round';
+                ctx.strokeStyle = this.tools.colour.selected;
+                ctx.lineWidth = this.tools.pen.size;
+                ctx.stroke();
+                ctx.closePath();
+    
+        },
+    
+        scaleDrawingCanvas(canvas,ctx) { // Scale upper canvas up and size it back down to remove blurry lines on high DPI screens when drawing
+            let devicePixelRatio = window.devicePixelRatio || 1;
+
+            canvas.upperCanvasEl.setAttribute('width', canvas.width * devicePixelRatio);
+            canvas.upperCanvasEl.setAttribute('height', canvas.height * devicePixelRatio);
+
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+        },
+
+        descaleDrawingCanvas(canvas) { // Descale upper canvas for fabric to calculate accurate mouse coordinates
+
+          canvas.upperCanvasEl.setAttribute('width', canvas.width);
+          canvas.upperCanvasEl.setAttribute('height', canvas.height);
+
+          //ctx.scale(-devicePixelRatio, -devicePixelRatio); -- hides selection box?
+      },
+
+        getMidpoint(point1, point2) {
+            return {
+                x: Math.round((point1.x + point2.x)/2),
+                y: Math.round((point1.y + point2.y)/2)
+            }
+        },
+    
+        roundPixels(point) {
+            return {
+                x: Math.round(point.x),
+                y: Math.round(point.y)
+            }
+        },
+    
+        addPoint(x, y, dragging, ctx) {
+            let newDot = new fabric.Point(x,y);
+            newDot.dragging = dragging;
+
+            this.points.push(newDot);
+            this.draw(ctx);
+        },
+    
+        // Handles cursor position for different pointers
+        getCursorPos(event) {
+            let mouseX, mouseY;
+
+            if (event.pointerType == 'mouse' || event.pointerType == 'pen') {
+                mouseX = event.pageX;// - canvas.viewportTransform[4];
+                mouseY = event.pageY;// - canvas.viewportTransform[5];
+            }
+            else { // touch
+                mouseX = event.touches[0].clientX;
+                mouseY = event.touches[0].clientY;
+            }
+            return {
+                x: mouseX,
+                y: mouseY
+            };
+
+            
+        },
+
+        makeObjectsUnselectable(canvas) {
+          canvas.renderAll();
+          canvas.discardActiveObject();
+          canvas.forEachObject(function(object){ 
+                object.selectable = false; 
+
+                object.oldPerPixelTargetFind = object.perPixelTargetFind; // save the perPixelTargetFind setting
+                object.perPixelTargetFind = true; // So that erasing is easier/quicker
+          });
+        },
+
+        makeObjectsSelectable(canvas) {
+          canvas.renderAll();
+          canvas.forEachObject(function(object){ 
+                object.selectable = true;
+                object.perPixelTargetFind = object.oldPerPixelTargetFind; // Set PerPixelTargetFind back to old value
+          });
+        },
+
+        adjustPointsforDrag(canvas) { // Changes the coordinates to adjust for the dragging of the canvas so the svg will be put in the correct location
+          let length = this.points.length;
+          for (let i = 0; i < length; i++) {
+            this.points[i].x -= canvas.viewportTransform[4];
+            this.points[i].y -= canvas.viewportTransform[5];
+          }
+
+        },
+
+        finalisePath(canvas, ctx) {
+          this.adjustPointsforDrag(canvas);
+          let pathData = fabric.PencilBrush.prototype.convertPointsToSVGPath(this.points).join('');
+          if (pathData === 'M 0 0 Q 0 0 0 0 L 0 0') {
+            // do not create 0 width/height paths, as they are
+            // rendered inconsistently across browsers
+            // Firefox 4, for example, renders a dot,
+            // whereas Chrome 10 renders nothing
+            canvas.requestRenderAll();
+            return;
+          }
+
+          let path = this.createPath(pathData,canvas);
+          canvas.clearContext(ctx);
+          canvas.add(path);
+          canvas.renderAll();
+          path.setCoords();
+
+
+          // fire event 'path' created
+          canvas.fire('path:created', { path: path });
+        },
+
+        createPath(pathData) {
+          let path = new fabric.Path(pathData, {
+            fill: null,
+            stroke: this.tools.colour.selected,
+            strokeWidth: this.tools.pen.size,
+            strokeLineCap: 'round',
+            strokeMiterLimit: 10,
+            strokeLineJoin: 'round',
+            strokeDashArray: null
+          });
+          let position = new fabric.Point(path.left + path.width / 2, path.top + path.height / 2);
+          position = path.translateToGivenOrigin(position, 'center', 'center', path.originX, path.originY);
+          path.top = position.y;
+          path.left = position.x;
+    
+          return path;
         }
-
-
 
     }
 }
