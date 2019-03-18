@@ -59,6 +59,7 @@ export default {
   },
   methods: {
     openStudentWhiteboard(student) {
+      console.log(student);
       
     }
   }
@@ -68,6 +69,8 @@ export default {
 <style lang="scss" scoped>
 
 .room {
+  text-align: center;
+  color: #2c3e50;
   height: 100%;
   display: grid;
   grid-template-columns: 1fr;

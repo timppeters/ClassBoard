@@ -3,7 +3,7 @@
     <canvas :id="board"></canvas>
 
     <div class="sidebar" id="sidebar-top">
-      <div class="sidebar-button" id="undo"><img :src="require('../assets/img/sidebar/undo.svg')" alt=""></div>
+      <div class="sidebar-button" id="undo"><img :src="require('../assets/img/sidebar/undo.svg')" v-on:click="handleToolClick('undo')" ></div>
     </div>
     <div class="sidebar" id="sidebar-bottom">
       <div class="sidebar-button" v-for="(value, key) in tools" :id="key" :key="key">
@@ -30,10 +30,6 @@
       </div>
     </div>
 
-    <div class="contextMenu" v-if="showContextMenu">
-      <span class="paste">Paste</span>
-    </div>
-
   </div>
 </template>
 
@@ -49,7 +45,6 @@ export default {
   data() {
     return {
       selectedTool: 'pen',
-      showContextMenu: false,
       tools: {
         select: {
           
@@ -146,6 +141,7 @@ export default {
   }*/,
   mounted() {
     this.initialiseCanvas(this.board);
+    
   }
 }
 </script>
@@ -391,17 +387,6 @@ export default {
       padding: 1rem;
       box-shadow: 0px 1px 15px rgba(0,0,0,0.3);
       display: grid;
-    }
-  }
-
-  .contextMenu {
-    position: fixed;
-    display: grid;
-    margin: auto;
-    z-index: 1;
-
-    .paste {
-      font-size: 1.5rem;
     }
   }
 

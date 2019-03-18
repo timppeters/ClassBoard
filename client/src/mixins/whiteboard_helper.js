@@ -92,8 +92,9 @@ export const whiteboard_helper = {
               });
 
             document.addEventListener('paste', e => {
+
               let items = e.clipboardData.items;
-              
+                            
 
               for (let i = 0; i < items.length; i++) {
                 let file = items[i];
@@ -136,26 +137,11 @@ export const whiteboard_helper = {
                 }
               }
             });
-
-            // Custom 'paste' context menu
-            fabric.util.addListener(canvas.upperCanvasEl, 'contextmenu', e => {
-              this.showContextMenu = true;
-              let cursor = {x: e.clientX, y: e.clientY};
-              let contextMenu = document.getElementsByClassName('contextMenu');
-              console.log(contextMenu);
-              console.log(contextMenu[0]);
-              //contextMenu.setAttribute('left', cursor.x);
-              //contextMenu.setAttribute('top', cursor.y);
-            });
             
         
             // set up pointer event listeners to identify pen/mouse/touch
             fabric.util.addListener(canvas.upperCanvasEl, 'pointerdown', e => {
-              this.showContextMenu = false;
-              if (this.anyToolOptionsOpen()) {
-                this.hideToolOptions(); // Hide tool option menus and don't register a tool click
-              }
-              else {
+              this.hideToolOptions(); // Hide tool option menus
                   if (e.pointerType == 'pen') {
                     if (e.button == 0) { // Pen contact
                       if (canvas.getActiveObjects().length == 0) {
@@ -325,7 +311,7 @@ export const whiteboard_helper = {
                       canvas.lastPosY = canvas.touches[0].clientY;
                     }
                   }
-                }
+                
               });
         
             fabric.util.addListener(canvas.upperCanvasEl, 'pointermove', e => {
