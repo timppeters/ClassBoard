@@ -30,7 +30,7 @@
     <whiteboard v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" key="questions"></whiteboard>
     <whiteboard v-bind:class="{ selected : currentBoard == 'working'}" board="working" key="working"></whiteboard>
     <div class="students" v-bind:class="{ selected : currentBoard == 'students'}">
-      <div class="student" v-for="(value) in leader.students" :key="value"><img src="../assets/img/student.png"><span class='name'>{{value}}</span></div>
+      <div class="student" v-for="(value) in leader.students" :key="value"><img src="../assets/img/student.png" v-on:click="openStudentWhiteboard(value)"><span class='name'>{{value}}</span></div>
     </div>
   </div>
 </template>
@@ -55,6 +55,11 @@ export default {
       student: {
 
       }
+    }
+  },
+  methods: {
+    openStudentWhiteboard(student) {
+      
     }
   }
 }
@@ -94,6 +99,11 @@ export default {
         height: 7rem;
         border-radius: 0.5rem;
         box-shadow: 0px 1px 15px rgba(0,0,0,0.1);
+        cursor: pointer;
+
+        &:hover {
+          box-shadow: 0px 1px 15px rgba(0,0,0,0.3);
+        }
       }
 
       span {

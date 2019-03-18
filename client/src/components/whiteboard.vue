@@ -29,6 +29,11 @@
         <input type="file" v-on:change="uploadImageToCanvas($event)">
       </div>
     </div>
+
+    <div class="contextMenu" v-if="showContextMenu">
+      <span class="paste">Paste</span>
+    </div>
+
   </div>
 </template>
 
@@ -44,6 +49,7 @@ export default {
   data() {
     return {
       selectedTool: 'pen',
+      showContextMenu: false,
       tools: {
         select: {
           
@@ -387,6 +393,18 @@ export default {
       display: grid;
     }
   }
+
+  .contextMenu {
+    position: fixed;
+    display: grid;
+    margin: auto;
+    z-index: 1;
+
+    .paste {
+      font-size: 1.5rem;
+    }
+  }
+
 }
 
 

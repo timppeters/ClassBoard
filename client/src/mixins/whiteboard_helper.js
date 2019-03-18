@@ -49,6 +49,8 @@ export const whiteboard_helper = {
                 oldPinchZoomDistance: 0
               });
 
+              //load from json
+
         
             // Set default object settings
             fabric.Object.prototype.set({
@@ -134,10 +136,22 @@ export const whiteboard_helper = {
                 }
               }
             });
+
+            // Custom 'paste' context menu
+            fabric.util.addListener(canvas.upperCanvasEl, 'contextmenu', e => {
+              this.showContextMenu = true;
+              let cursor = {x: e.clientX, y: e.clientY};
+              let contextMenu = document.getElementsByClassName('contextMenu');
+              console.log(contextMenu);
+              console.log(contextMenu[0]);
+              //contextMenu.setAttribute('left', cursor.x);
+              //contextMenu.setAttribute('top', cursor.y);
+            });
             
         
             // set up pointer event listeners to identify pen/mouse/touch
             fabric.util.addListener(canvas.upperCanvasEl, 'pointerdown', e => {
+              this.showContextMenu = false;
               if (this.anyToolOptionsOpen()) {
                 this.hideToolOptions(); // Hide tool option menus and don't register a tool click
               }
@@ -405,17 +419,19 @@ export const whiteboard_helper = {
                 
               }
               else if (e.pointerType == 'mouse') {
-                if (this.selectedTool == 'pen') {
-                  this.makeObjectsSelectable();
-                  this.finalisePath();
-                  this.points = [];
-                  this.descaleDrawingCanvas();
-                }
-                else if (this.selectedTool == 'eraser') {
-                  this.makeObjectsSelectable();
-                }
-                else {
-                  //
+                if (e.button == 0){
+                  if (this.selectedTool == 'pen') {
+                    this.makeObjectsSelectable();
+                    this.finalisePath();
+                    this.points = [];
+                    this.descaleDrawingCanvas();
+                  }
+                  else if (this.selectedTool == 'eraser') {
+                    this.makeObjectsSelectable();
+                  }
+                  else {
+                    //
+                  }
                 }
 
 
