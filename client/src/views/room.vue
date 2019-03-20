@@ -1,27 +1,27 @@
 <template>
   <div class="room">
 
-    <div class="topbar" v-bind:class="{ small : userType=='leader'&&!currentBoard!='student'}">
+    <div class="topbar" v-bind:class="{ small : userType=='leader'&&!currentBoard!='user'}">
       <div class="sandwich" v-on:click="showMenu = !showMenu" >
         <div class="bar1"></div>
         <div class="bar2"></div>
         <div class="bar3"></div>
       </div>
       <div class="name">{{roomName}}</div>
-      <div class="button" v-bind:class="{ hide : userType=='leader'&&!currentBoard!='student'}">submit</div>
+      <div class="button" v-bind:class="{ hide : userType=='leader'&&!currentBoard!='user'}">submit</div>
     </div>
 
     <transition name="slide-left">
       <div v-if="showMenu" id="menu">
         <div id="close"><img src="../assets/img/sidebar/close.svg" alt="" @click="showMenu = !showMenu"></div>
         <div id="title">Whiteboards</div>
-        <div class="links" id="links-student" v-if="userType == 'student'">
+        <div class="links" id="links-student" v-if="userType == 'user'">
           <div class="link" v-bind:class="{selected : currentBoard=='questions'}" v-on:click="currentBoard='questions'">Questions</div>
           <div class="link" v-bind:class="{selected : currentBoard=='working'}" v-on:click="currentBoard='working'">Working</div>
         </div>
         <div class="links" id="links-leader" v-if="userType == 'leader'">
           <div class="link" v-bind:class="{selected : currentBoard=='questions'}" v-on:click="currentBoard='questions'">Questions</div>
-          <div class="link" v-bind:class="{selected : currentBoard=='students'}" v-on:click="currentBoard='students'">Students</div>
+          <div class="link" v-bind:class="{selected : currentBoard=='users'}" v-on:click="currentBoard='users'">Users</div>
         </div>
         <div id="leave"><div>leave</div></div>
       </div>
@@ -29,8 +29,8 @@
 
     <whiteboard v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" key="questions"></whiteboard>
     <whiteboard v-bind:class="{ selected : currentBoard == 'working'}" board="working" key="working"></whiteboard>
-    <div class="students" v-bind:class="{ selected : currentBoard == 'students'}">
-      <div class="student" v-for="(value) in leader.students" :key="value"><img src="../assets/img/student.png" v-on:click="openStudentWhiteboard(value)"><span class='name'>{{value}}</span></div>
+    <div class="users" v-bind:class="{ selected : currentBoard == 'users'}">
+      <div class="user" v-for="(value) in leader.users" :key="value"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value)"><span class='name'>{{value}}</span></div>
     </div>
   </div>
 </template>
@@ -50,16 +50,16 @@ export default {
       currentBoard: 'questions',
       userType: 'leader',
       leader: {
-        students: ['Tim', 'Ethan', 'Balazs', 'Aidan', 'Jory', 'Mary', 'Sarah', 'George', 'Jay', 'Selena', 'Robert']
+        users: ['Tim', 'Ethan', 'Balazs', 'Aidan', 'Jory', 'Mary', 'Sarah', 'George', 'Jay', 'Selena', 'Robert']
       },
-      student: {
+      user: {
 
       }
     }
   },
   methods: {
-    openStudentWhiteboard(student) {
-      console.log(student);
+    openUserWhiteboard(user) {
+      console.log(user);
       
     }
   }
