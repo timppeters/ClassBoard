@@ -39,7 +39,7 @@ io.on('connection', socket => {
       rooms[room.pin] = room;
       socket.join(room.pin);
       socket.emit('createdRoom', {pin: room.pin});
-      Log.yellow('Created room: ' + room.name);
+      Log.yellow('Created room: ' + room.pin + ' (' + room.name + ')');
 
       sockets[socket.id].room = room.pin;
       sockets[socket.id].leader = true;
@@ -103,12 +103,13 @@ io.on('connection', socket => {
         if (sockets[socket.id].leader) {
           socket.to(pin).emit('roomClosed');
           deleteRoom(pin);
-          Log.white('Room ' + pin + ' closed')
+          Log.white('Room ' + pin + ' closed');
         }
         else {
           rooms[pin].removeUserBySocketId(socket.id);
           let nickname = rooms[pin].getUserNickname(socket.id);
           socket.to(pin).emit('userLeft', {user: nickname});
+          Log.magenta('User ' + nickname + ' left room ' + pin);
         }
       }
 

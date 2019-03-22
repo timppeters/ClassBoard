@@ -146,7 +146,7 @@ export default {
     roomStarted() {
       this.roomStarted = true;
       if(this.inLobby) {
-        this.$router.push({ path: 'room' });
+        this.$router.replace({ name: 'room' , params: {roomName: this.roomName, userType: this.userType}});
       }
       else {
         this.roomName = '';

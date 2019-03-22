@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Lobby from './views/Lobby.vue'
+import Room from './views/Room.vue'
 
 Vue.use(Router)
 
@@ -16,10 +17,8 @@ export default new Router({
     {
       path: '/room',
       name: 'room',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './views/room.vue')
+      component: Room,
+      props: true
     }
   ]
 })

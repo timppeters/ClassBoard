@@ -30,7 +30,7 @@
     <whiteboard v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" key="questions"></whiteboard>
     <whiteboard v-bind:class="{ selected : currentBoard == 'working'}" board="working" key="working"></whiteboard>
     <div class="users" v-bind:class="{ selected : currentBoard == 'users'}">
-      <div class="user" v-for="(value) in leader.users" :key="value"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value)"><span class='name'>{{value}}</span></div>
+      <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value)"><span class='name'>{{value}}</span></div>
     </div>
   </div>
 </template>
@@ -43,14 +43,13 @@ export default {
   components: {
     whiteboard
   },
+  props: ['roomName', 'userType'],
   data() {
     return {
-      roomName: 'Test Maths',
       showMenu: false,
       currentBoard: 'questions',
-      userType: 'leader',
       leader: {
-        users: ['Tim', 'Ethan', 'Balazs', 'Aidan', 'Jory', 'Mary', 'Sarah', 'George', 'Jay', 'Selena', 'Robert']
+        users: []
       },
       user: {
 
@@ -62,6 +61,12 @@ export default {
       console.log(user);
       
     }
+  },
+  mounted() {
+    if (this.roomName == undefined || this.userType == undefined) {
+      this.$router.replace({ name: 'lobby'});
+    }
+    this.$socket.emit('initialiseBoards');
   }
 }
 </script>
@@ -71,10 +76,9 @@ export default {
 .room {
   text-align: center;
   color: #2c3e50;
-  height: 100%;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 1fr 4fr;
+  grid-template-rows: 1fr;
   background-image: linear-gradient(to bottom right,rgb(255, 255, 255) 20%,rgb(232, 232, 232) 100%);
 
   .whiteboard {
@@ -85,16 +89,17 @@ export default {
     }
   }
 
-  .students {
+  .users {
     display: none;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     grid-row-start: 2;
+    margin-top: 10rem;
 
     &.selected {
       display: grid;
     }
 
-    .student {
+    .user {
       display: grid;
       grid-template-rows: 1fr 1fr;
       margin: auto;
