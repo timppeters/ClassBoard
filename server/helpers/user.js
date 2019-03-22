@@ -1,10 +1,10 @@
 class User {
 
-    constructor(socketId) {
+    constructor(socketId, nickname, room) {
         this._socketId = socketId;
         this._canvas = {};
-        this._nickname = '';
-        this._room = '';
+        this._nickname = nickname;
+        this._room = room;
 
     }
 

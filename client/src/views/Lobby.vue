@@ -3,11 +3,11 @@
     
     <div class="nav" v-if="!inRoom">
       <div class="links">
-        <div class="link" v-on:click="createRoom=true">Create</div>
+        <div class="link" v-on:click="createRoomScreen=true">Create</div>
       </div>
 
       <div class="logo">
-        <img src="../assets/img/Logo.svg" alt="Logo" v-on:click="createRoom=false">
+        <img src="../assets/img/Logo.svg" alt="Logo" v-on:click="createRoomScreen=false">
       </div>
 
       <div class="links">
@@ -16,20 +16,26 @@
 
     </div>
 
+    <div class="notifications">
+      <div v-if="notifications.kicked">You have been kicked!<span v-on:click="notifications.kicked = false">&times;</span></div>
+      <div v-if="notifications.roomStartedKicked">The room started without you :(<span v-on:click="notifications.roomStartedKicked = false">&times;</span></div>
+      <div v-if="notifications.roomClosed">The leader closed the room<span v-on:click="notifications.roomClosed = false">&times;</span></div>
+    </div>
+
     <div class="container" v-if="!inLobby" v-bind:class="{ rows : !inLobby}">
 
-      <form id="pin" v-if="!inRoom && !createRoom" v-on:submit.prevent="inRoom = true">
-        <div class="errorMessages" v-if="notifications.invalidPin">
-          <div>Invalid Pin</div>
+      <form id="pin" v-if="!inRoom && !createRoomScreen" v-on:submit.prevent="joinRoom(pin)">
+        <div class="errorMessages">
+          <div v-if="notifications.invalidPin">Invalid Pin</div>
+          <div v-if="notifications.roomAlreadyStarted">Room already started!</div>
         </div>
         <input type="text" v-model="pin" placeholder="123456" v-validate.initial="'required|numeric|length:6'" name="pin" required autocomplete="off" key="pin">
         <button v-bind:class="{ disabled : errors.has('pin') }">join</button>
 
       </form>
 
-      <form id="nickname" v-if="inRoom && !inLobby && !createRoom" v-on:submit.prevent="inLobby = true">
-        <div class="errorMessages" v-if="notifications.invalidNickname || notifications.nicknameTaken">
-          <div v-if="notifications.invalidNickname">Invalid Nickname</div>
+      <form id="nickname" v-if="inRoom && !inLobby && !createRoomScreen" v-on:submit.prevent="joinLobby(user.nickname, pin)">
+        <div class="errorMessages">
           <div v-if="notifications.nicknameTaken">Nickname Taken</div>
 
         </div>
@@ -37,8 +43,8 @@
         <button v-bind:class="{ disabled : errors.has('nickname') }">enter</button>
       </form>
 
-      <form id="createRoom" v-if="createRoom" v-on:submit.prevent="inRoom=true;inLobby = true">
-        <input type="text" v-model="roomName" placeholder="Room Name" v-validate.initial="'required|alpha_num|min:3|max:13'" name="roomName" required autocomplete="off" key="roomName">
+      <form id="createRoom" v-if="createRoomScreen" v-on:submit.prevent="createRoom(roomName)">
+        <input type="text" v-model="roomName" placeholder="Room Name" v-validate.initial="'required|alpha_spaces|min:3|max:26'" name="roomName" required autocomplete="off" key="roomName">
         <button v-bind:class="{ disabled : errors.has('roomName') }">create</button>
       </form>
 
@@ -49,11 +55,11 @@
         <div class="roomName">{{roomName}}</div>
         <div class="message">Join room with pin:</div>
         <div class="pin">{{pin}}</div>
-        <div class="button" v-if="userType == 'leader'"><span>START</span></div>
+        <div class="button" v-if="userType == 'leader'" v-on:click="startRoom(pin)"><span>START</span></div>
 
       </div>
-      <div class="users">
-        <div class="user" v-for="(value) in users" :key="value">{{value}}<span>&times;</span></div>
+      <div class="users" ref="users" v-bind:class="lobbyColour">
+        <div class="user" v-for="(value, key) in users" :key="key">{{value}}<span v-if="userType == 'leader'" v-on:click="kick(value, pin)">&times;</span></div>
 
       </div>
 
@@ -68,18 +74,19 @@ export default {
   name: 'lobby',
   data() {
     return {
-      userType: 'user',
+      userType: 'student',
       roomName: '',
       pin: '',
       users: [],
       inRoom: false,
       inLobby: false,
-      createRoom: false,
+      createRoomScreen: false,
       notifications: {
+        roomClosed: false,
         roomAlreadyStarted: false,
+        roomStartedKicked: false,
         kicked: false,
         invalidPin: false,
-        invalidNickname: false,
         nicknameTaken: false
       },
       leader: {
@@ -89,11 +96,152 @@ export default {
         nickname: '',
 
       }
+    }
+  },
+  sockets: {
+    joinedRoom(data) {
+      this.inRoom = true;
+      this.roomName = data.roomName;
 
+    },
+
+    joinedLobby(data) {
+      this.inLobby = true;
+      this.users = data.users;
+      this.setUsersDivHeight();
+    },
+
+    createdRoom(data) {
+      this.userType = 'leader';
+      this.inRoom = true;
+      this.inLobby = true;
+      this.pin = data.pin;
+      this.setUsersDivHeight();
+
+    },
+
+    userJoined(data) {
+      this.users.push(data.user);
+
+    },
+
+    userLeft(data) {
+      if (data.user == this.user.nickname) {
+        this.$socket.emit('leave',{pin: this.pin});
+        this.roomName = '';
+        this.pin = '';
+        this.user.nickname = '';
+        this.users = [];
+        this.inRoom = false;
+        this.inLobby = false;
+        this.notifications.kicked = true;
+      }
+      else {
+        let index = this.users.indexOf(data.user);
+        this.users.splice(index, 1);
+      }
+      
+    },
+
+    roomStarted() {
+      this.roomStarted = true;
+      if(this.inLobby) {
+        this.$router.push({ path: 'room' });
+      }
+      else {
+        this.roomName = '';
+        this.pin = '';
+        this.user.nickname = '';
+        this.users = [];
+        this.inRoom = false;
+        this.inLobby = false;
+        this.notifications.roomStartedKicked = true;
+      }
+
+    },
+
+    roomClosed() {
+      this.$socket.emit('leave',{pin: this.pin});
+
+      this.roomName = '';
+      this.pin = '';
+      this.user.nickname = '';
+      this.users = [];
+      this.inRoom = false;
+      this.inLobby = false;
+      this.notifications.roomClosed = true;
+
+    },
+
+    //Errors
+
+    invalidPin() {
+      this.notifications.invalidPin = true;
+      this.pin = '';
+
+    },
+
+    nicknameTaken() {
+      this.notifications.nicknameTaken = true
+      this.user.nickname = '';
+    },
+
+    roomAlreadyBegun() {
+      this.notifications.roomAlreadyStarted = true;
+      this.pin = '';
     }
   },
   methods: {
 
+    joinRoom(pin) {
+      this.$validator.validateAll().then((result) => {
+        if (result) {
+          this.$socket.emit('joinRoom', {pin: pin});
+        }
+      });
+    },
+
+    joinLobby(nickname, pin) {
+      this.$validator.validateAll().then((result) => {
+        if (result) {
+          this.$socket.emit('joinLobby', {nickname: nickname, pin: pin});
+        }
+      });
+    },
+
+    createRoom(roomName) {
+      this.$validator.validateAll().then((result) => {
+        if (result) {
+          this.$socket.emit('createRoom', {roomName: roomName});
+        }
+      });
+    },
+
+    kick(nickname, pin) {
+      this.$socket.emit('kick', {pin: pin, nickname: nickname})
+    },
+
+    startRoom(pin) {
+      this.$socket.emit('startRoom', {pin: pin})
+    },
+
+    setUsersDivHeight() {
+      let height = window.innerHeight * 0.75;
+      this.$nextTick( () => {
+        this.$refs.users.style.height = height.toString() + 'px';
+      });
+      
+    },
+
+  },
+  mounted() {
+    
+  },
+  computed: {
+    lobbyColour() {
+      let lobbyColours = ['blue','red','pink','green','purple','orange','cyan'];
+      return lobbyColours[Math.floor(Math.random() * lobbyColours.length)];
+    }
   }
 }
 </script>
@@ -101,6 +249,8 @@ export default {
 <style lang="scss" scoped>
 
 $showClose: none;
+$blue: hsl(215, 92%, 61%);
+$orange: hsl(41, 100%, 50%);
 
 .home {
   height: 100%;
@@ -108,6 +258,26 @@ $showClose: none;
   overflow: hidden;
   background: white;
   color: #2c3e50;
+
+  .notifications {
+    position: absolute;
+    top: 10rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: $blue;
+    border-radius: 0.5rem;
+
+    div {
+      padding: 1rem;
+      color: white;
+
+      span {
+        margin-left: 1rem;
+        cursor: pointer;
+      }
+
+    }
+  }
 
   &.rows {
     grid-template-rows: 1.5fr 6fr 1fr;
@@ -173,7 +343,7 @@ $showClose: none;
 
         &:focus {
           outline: none;
-          box-shadow: 0 0 0 0.2rem #489bd5;
+          box-shadow: 0 0 0 0.2rem $blue;
 
         }
 
@@ -186,7 +356,7 @@ $showClose: none;
         grid-row-start: 3;
         border: none;
         font-size: 2.2rem;
-        background:rgb(255, 174, 0);
+        background: $orange;
         color: white;
         cursor: pointer;
         transition: background-color 0.1s ease;
@@ -196,7 +366,7 @@ $showClose: none;
         }
 
         &:active {
-          background: darken(rgb(255, 174, 0), 10%);
+          background: darken($orange, 10%);
         }
 
         &.disabled {
@@ -210,7 +380,7 @@ $showClose: none;
 
   .lobby {
     display: grid;
-    grid-template-rows: auto 34rem;
+    grid-template-rows: 25% 75%;
 
     .header {
       display: grid;
@@ -245,13 +415,13 @@ $showClose: none;
       .button {
         grid-column-start: 3;
         margin: auto 2rem 0 auto;
-        background: rgb(255, 174, 0);
+        background: $orange;
         cursor: pointer;
         border-radius: 0.5rem;
         transition: background-color 0.1s ease;
 
         &:active {
-          background: darken(rgb(255, 174, 0), 10%);
+          background: darken($orange, 10%);
         }
 
         span {
@@ -265,11 +435,34 @@ $showClose: none;
     }
 
     .users {
-      background: purple;
+      background-image: #800080;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr 1fr;
       overflow: auto;
-      height: 34rem;
+      height: 100%;
+
+      &.blue {
+        background-image: linear-gradient(to bottom right,#1e3c72 0%,#2a5298 100%);
+      }
+      &.red {
+        background-image: linear-gradient(to bottom right,#93291E 0%,#ED213A 100%);
+      }
+      &.pink {
+        background-image: linear-gradient(to bottom right,#f2709c 0%,#f09c81 100%);
+      }
+      &.green {
+        background-image: linear-gradient(to bottom right,#11998e 0%,#38ef7d 100%);
+      }
+      &.purple {
+        background-image: linear-gradient(to bottom right,#6a3093 0%,#a044ff 100%);
+      }
+      &.orange {
+        background-image: linear-gradient(to bottom right,#f46b45 0%,#eea849 100%);
+      }
+      &.cyan {
+        background-image: linear-gradient(to bottom right,#0083B0 0%,#00B4DB 100%);
+      }
       
       .user {
         color: white;
