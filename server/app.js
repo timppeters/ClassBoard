@@ -36,6 +36,7 @@ io.on('connection', socket => {
       }
 
       room._leader.room = room.pin;
+      room._leader.screenDimensions = {x: data.screenDimensions.x, y: data.screenDimensions.y};
       rooms[room.pin] = room;
       socket.join(room.pin);
       socket.emit('createdRoom', {pin: room.pin});
@@ -69,6 +70,7 @@ io.on('connection', socket => {
       }
       else {
         let user = new User(socket.id, data.nickname, data.pin);
+        user.screenDimensions = {x: data.screenDimensions.x, y: data.screenDimensions.y};
         rooms[data.pin].addUser(user);
         socket.emit('joinedLobby', {users: rooms[data.pin].usersNicknames});
         socket.to(data.pin).emit('userJoined', {user: data.nickname});
@@ -79,8 +81,11 @@ io.on('connection', socket => {
     socket.on('startRoom', data => {
       if (rooms[data.pin]._leader.socketId == socket.id) {
         rooms[data.pin].started = true;
-        io.in(data.pin).emit('roomStarted');
-        Log.cyan('Room ' + data.pin + ' started');
+        rooms[data.pin].createWhiteboards().then( () => {
+          io.in(data.pin).emit('roomStarted');
+          Log.cyan('Room ' + data.pin + ' started');
+        });
+        
       }
     });
 

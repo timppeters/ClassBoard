@@ -74,7 +74,7 @@ export default {
   name: 'lobby',
   data() {
     return {
-      userType: 'student',
+      userType: 'user',
       roomName: '',
       pin: '',
       users: [],
@@ -204,7 +204,14 @@ export default {
     joinLobby(nickname, pin) {
       this.$validator.validateAll().then((result) => {
         if (result) {
-          this.$socket.emit('joinLobby', {nickname: nickname, pin: pin});
+          this.$socket.emit('joinLobby', {
+            nickname: nickname,
+            pin: pin,
+            screenDimensions: {
+              x: window.innerWidth,
+              y: window.innerHeight
+            }
+            });
         }
       });
     },
@@ -212,7 +219,13 @@ export default {
     createRoom(roomName) {
       this.$validator.validateAll().then((result) => {
         if (result) {
-          this.$socket.emit('createRoom', {roomName: roomName});
+          this.$socket.emit('createRoom', {
+            roomName: roomName,
+            screenDimensions: {
+              x: window.innerWidth,
+              y: window.innerHeight
+            }
+            });
         }
       });
     },

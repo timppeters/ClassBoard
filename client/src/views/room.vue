@@ -21,7 +21,7 @@
         </div>
         <div class="links" id="links-leader" v-if="userType == 'leader'">
           <div class="link" v-bind:class="{selected : currentBoard=='questions'}" v-on:click="currentBoard='questions'">Questions</div>
-          <div class="link" v-bind:class="{selected : currentBoard=='users'}" v-on:click="currentBoard='users'">Users</div>
+          <div class="link" v-bind:class="{selected : currentBoard=='users'}" v-on:click="currentBoard='users';setUsersDivHeight()">Users</div>
         </div>
         <div id="leave"><div>leave</div></div>
       </div>
@@ -29,8 +29,8 @@
 
     <whiteboard v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" key="questions"></whiteboard>
     <whiteboard v-bind:class="{ selected : currentBoard == 'working'}" board="working" key="working"></whiteboard>
-    <div class="users" v-bind:class="{ selected : currentBoard == 'users'}">
-      <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value)"><span class='name'>{{value}}</span></div>
+    <div class="users" ref="users" v-bind:class="{ selected : currentBoard == 'users'}">
+      <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value);"><span class='name'>{{value}}</span></div>
     </div>
   </div>
 </template>
@@ -56,10 +56,35 @@ export default {
       }
     }
   },
+  sockets: {
+    initialiseBoards(data) {
+      if (this.userType == 'user') {
+        //data.leadersBoard & data.userBoard
+      }
+      else {
+        //data.leadersBoard & data.usersBoards
+
+      }
+
+    }
+  },
   methods: {
     openUserWhiteboard(user) {
       console.log(user);
       
+    },
+
+    setUsersDivHeight() {
+      this.$nextTick( () => {
+        let heightOfDiv = this.$refs.users.clientHeight;
+        if (heightOfDiv <= window.innerHeight) {
+          this.$refs.users.style.height = window.innerHeight.toString() - this.remToPixels(10) + 'px';
+        }
+      });
+    },
+
+    remToPixels(rem) {
+      return (rem * parseFloat(getComputedStyle(document.documentElement).fontSize));
     }
   },
   mounted() {
@@ -79,7 +104,7 @@ export default {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
-  background-image: linear-gradient(to bottom right,rgb(255, 255, 255) 20%,rgb(232, 232, 232) 100%);
+  
 
   .whiteboard {
     display: none;
@@ -93,7 +118,9 @@ export default {
     display: none;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     grid-row-start: 2;
-    margin-top: 10rem;
+    padding-top: 10rem;
+    background-image: linear-gradient(to bottom right,rgb(255, 255, 255) 20%,rgb(232, 232, 232) 100%);
+    height: 100%;
 
     &.selected {
       display: grid;

@@ -3,7 +3,8 @@ class Leader {
     constructor(socketId) {
         this._socketId = socketId;
         this._canvas = {};
-        this.room = '';
+        this._room = '';
+        this._screenDimensions = {};
 
     }
 
@@ -25,6 +26,14 @@ class Leader {
 
     get socketId() {
         return this._socketId;
+    }
+
+    set screenDimensions(dimensions) {
+        this._screenDimensions = dimensions;
+    }
+
+    get screenDimensions() {
+        return this._screenDimensions;
     }
 }
 

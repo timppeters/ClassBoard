@@ -137,6 +137,10 @@ export const whiteboard_helper = {
                 }
               }
             });
+
+            canvas.on('object:modified', e => {
+              console.log(e);
+            });
             
         
             // set up pointer event listeners to identify pen/mouse/touch
@@ -691,7 +695,7 @@ export const whiteboard_helper = {
 
 
           // fire event 'path' created
-          canvas.fire('path:created', { path: path });
+          canvas.trigger('path:created', { path: path });
         },
 
         createPath(pathData) {

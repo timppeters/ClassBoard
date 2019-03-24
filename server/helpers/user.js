@@ -5,6 +5,7 @@ class User {
         this._canvas = {};
         this._nickname = nickname;
         this._room = room;
+        this._screenDimensions = {};
 
     }
 
@@ -34,6 +35,14 @@ class User {
 
     get socketId() {
         return this._socketId;
+    }
+
+    set screenDimensions(dimensions) {
+        this._screenDimensions = dimensions;
+    }
+
+    get screenDimensions() {
+        return this._screenDimensions;
     }
 }
 
