@@ -139,7 +139,15 @@ export const whiteboard_helper = {
             });
 
             canvas.on('object:modified', e => {
-              console.log(e);
+              this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
+            });
+
+            canvas.on('object:added', e => {
+              this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
+            });
+
+            canvas.on('object:removed', e => {
+              this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
             });
             
         
@@ -321,21 +329,13 @@ export const whiteboard_helper = {
             fabric.util.addListener(canvas.upperCanvasEl, 'pointermove', e => {
               
               if (e.pointerType == 'pen') {
-                //if tool == eraser {
-                  // delete e.target object
-                //}
-                //send drawing command to socket
-                //canvas.freeDrawingBrush.width = Math.round(e.pressure * 5);
                 if (this.mouseDown) {
                   if (this.selectedTool == 'pen') {
                     let cursorPos = this.getCursorPos(e);
                     this.addPoint(cursorPos.x, cursorPos.y, true);
                   }
-                  else if (this.selectedTool == 'eraser') {
+                  else { 
                     //
-                  }
-                  else { //other tools
-
                   }
                 }
                 
@@ -348,10 +348,8 @@ export const whiteboard_helper = {
                       let cursorPos = this.getCursorPos(e);
                       this.addPoint(cursorPos.x, cursorPos.y, true);
                   }
-                  else if (this.selectedTool == 'eraser') {
-                      //
-                  }
-                  else { //other tools
+                  else { 
+                    //
 
                   }
                 }

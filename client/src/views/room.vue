@@ -27,8 +27,8 @@
       </div>
     </transition>
 
-    <whiteboard v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" key="questions"></whiteboard>
-    <whiteboard v-bind:class="{ selected : currentBoard == 'working'}" board="working" key="working"></whiteboard>
+    <whiteboard ref="questions" v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" :userType="userType" :nickname="nickname" key="questions"></whiteboard>
+    <whiteboard ref="working" v-bind:class="{ selected : currentBoard == 'working'}" board="working" key="working"></whiteboard>
     <div class="users" ref="users" v-bind:class="{ selected : currentBoard == 'users'}">
       <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value);"><span class='name'>{{value}}</span></div>
     </div>
@@ -43,7 +43,7 @@ export default {
   components: {
     whiteboard
   },
-  props: ['roomName', 'userType'],
+  props: ['roomName', 'userType', 'nickname', 'users'],
   data() {
     return {
       showMenu: false,
@@ -57,12 +57,17 @@ export default {
     }
   },
   sockets: {
-    initialiseBoards(data) {
+    updateBoard(data) {
       if (this.userType == 'user') {
-        //data.leadersBoard & data.userBoard
+        if (data.userType == 'leader') {
+          this.$refs.questions.loadWhiteboard(data.canvasData);
+        }
+        else {
+          this.$refs.working.loadWhiteboard(data.canvasData);
+        }
       }
       else {
-        //data.leadersBoard & data.usersBoards
+        //load a users board
 
       }
 
@@ -73,6 +78,7 @@ export default {
       console.log(user);
       
     },
+
 
     setUsersDivHeight() {
       this.$nextTick( () => {
@@ -92,6 +98,7 @@ export default {
       this.$router.replace({ name: 'lobby'});
     }
     this.$socket.emit('initialiseBoards');
+    this.leader.users = this.users;
   }
 }
 </script>

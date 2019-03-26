@@ -81,10 +81,8 @@ io.on('connection', socket => {
     socket.on('startRoom', data => {
       if (rooms[data.pin]._leader.socketId == socket.id) {
         rooms[data.pin].started = true;
-        rooms[data.pin].createWhiteboards().then( () => {
-          io.in(data.pin).emit('roomStarted');
-          Log.cyan('Room ' + data.pin + ' started');
-        });
+        io.in(data.pin).emit('roomStarted');
+        Log.cyan('Room ' + data.pin + ' started');
         
       }
     });
@@ -94,6 +92,18 @@ io.on('connection', socket => {
         rooms[data.pin].removeUserByNickname(data.nickname);
         io.in(data.pin).emit('userLeft', {user: data.nickname});
         Log.magenta('User ' + data.nickname + ' kicked from room ' + data.pin);
+      }
+    });
+
+    socket.on('sendBoard', data => {
+      let pin = sockets[socket.id].room;
+      console.log(data.userType);
+      if (data.userType == 'leader') {
+        rooms[pin]._leader.canvas = data.canvasData;
+        socket.to(pin).emit('updateBoard', data);
+      }
+      else {
+        rooms[pin]._users[data.userType].canvas = data.canvasData;
       }
     });
 

@@ -104,13 +104,6 @@ class Room {
         }
         this._pin = pin;
     }
-
-    createWhiteboards() {
-        return new Promise( resolve => {
-            this._leader.canvas = new fabric.Canvas(null, this._leader.screenDimensions.x, this._leader.screenDimensions.y);
-            resolve();
-        });
-    }
     
 }
 

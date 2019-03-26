@@ -40,7 +40,9 @@ export default {
   name: 'whiteboard',
   mixins: [whiteboard_helper],
   props: [
-    'board'
+    'board',
+    'userType',
+    'nickname'
   ],
   data() {
     return {
@@ -66,7 +68,7 @@ export default {
         text: {
           
         },
-        shape: {
+        shape: { 
           selected: 'rect',
           shapes: ['rect', 'line', 'triangle', 'circle'],
           showOptions: false
@@ -133,7 +135,14 @@ export default {
 
     changeShape(shape) {
       this.tools.shape.selected = shape;
-    }
+    },
+
+    loadWhiteboard(canvasData) {
+      this.canvas.loadFromJSON(canvasData);
+    },
+    sendWhiteboardToServer(canvasData, userType) {
+      this.$socket.emit('sendBoard', {canvasData: canvasData, userType:'leader'});
+    },
     
   }/*,
   sockets: {
