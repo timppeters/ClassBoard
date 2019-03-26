@@ -15,7 +15,7 @@
       <div v-if="showMenu" id="menu">
         <div id="close"><img src="../assets/img/sidebar/close.svg" alt="" @click="showMenu = !showMenu"></div>
         <div id="title">Whiteboards</div>
-        <div class="links" id="links-student" v-if="userType == 'user'">
+        <div class="links" id="links-user" v-if="userType == 'user'">
           <div class="link" v-bind:class="{selected : currentBoard=='questions'}" v-on:click="currentBoard='questions'">Questions</div>
           <div class="link" v-bind:class="{selected : currentBoard=='working'}" v-on:click="currentBoard='working'">Working</div>
         </div>
@@ -27,8 +27,8 @@
       </div>
     </transition>
 
-    <whiteboard ref="questions" v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" :userType="userType" :nickname="nickname" key="questions"></whiteboard>
-    <whiteboard ref="working" v-bind:class="{ selected : currentBoard == 'working'}" board="working" key="working"></whiteboard>
+    <whiteboard ref="questions" v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" v-bind:userType="userType" v-bind:nickname="nickname" key="questions"></whiteboard>
+    <whiteboard ref="working" v-bind:class="{ selected : currentBoard == 'working'}" board="working" v-bind:userType="userType" v-bind:nickname="nickname" key="working"></whiteboard>
     <div class="users" ref="users" v-bind:class="{ selected : currentBoard == 'users'}">
       <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value);"><span class='name'>{{value}}</span></div>
     </div>
@@ -68,9 +68,24 @@ export default {
       }
       else {
         //load a users board
+        if (data.userType == 'leader') {
+          this.$refs.questions.loadWhiteboard(data.canvasData);
+        }
 
       }
 
+    },
+
+    userLeft(data) {
+      if (data.user == this.nickname) {
+        this.$socket.emit('leave',{pin: this.pin});
+        location.reload();
+      }
+      else {
+        let index = this.leader.users.indexOf(data.user);
+        this.leader.users.splice(index, 1);
+      }
+      
     }
   },
   methods: {
@@ -124,6 +139,7 @@ export default {
   .users {
     display: none;
     grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
     grid-row-start: 2;
     padding-top: 10rem;
     background-image: linear-gradient(to bottom right,rgb(255, 255, 255) 20%,rgb(232, 232, 232) 100%);

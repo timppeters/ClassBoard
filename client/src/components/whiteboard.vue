@@ -2,10 +2,10 @@
   <div class="whiteboard">
     <canvas :id="board"></canvas>
 
-    <div class="sidebar" id="sidebar-top">
+    <div class="sidebar" v-if="userType=='leader' || board=='working'" id="sidebar-top">
       <div class="sidebar-button" id="undo"><img :src="require('../assets/img/sidebar/undo.svg')" v-on:click="handleToolClick('undo')" ></div>
     </div>
-    <div class="sidebar" id="sidebar-bottom">
+    <div class="sidebar" v-if="userType=='leader' || board=='working'" id="sidebar-bottom">
       <div class="sidebar-button" v-for="(value, key) in tools" :id="key" :key="key">
         <img :src="require('../assets/img/sidebar/'+key+'.svg')" v-bind:class="{selected : selectedTool==key}" v-on:click="handleToolClick(key)" alt="">
       </div>
@@ -34,11 +34,12 @@
 </template>
 
 <script>
-import {whiteboard_helper} from '../mixins/whiteboard_helper.js';
+import {whiteboard_helper_interactive} from '../mixins/whiteboard_helper_interactive.js';
+import {whiteboard_helper_static} from '../mixins/whiteboard_helper_static.js';
 
 export default {
   name: 'whiteboard',
-  mixins: [whiteboard_helper],
+  mixins: [whiteboard_helper_interactive, whiteboard_helper_static],
   props: [
     'board',
     'userType',
@@ -93,10 +94,19 @@ export default {
       if (tool == 'delete') {
         this.deleteObjects();
       }
+      else if (tool == 'undo') {
+        if (this.userType == 'leader') {
+          this.$socket.emit('undo', {userType:this.userType})
+        }
+        else {
+          this.$socket.emit('undo', {userType:this.nickname})
+        }
+        
+      }
     },
 
     selectTool(tool) {
-      if (tool != 'colour' && tool != 'extra' && tool != 'delete') {
+      if (tool != 'colour' && tool != 'extra' && tool != 'delete' && tool != 'undo') {
         this.selectedTool = tool;
       }
     },
@@ -139,17 +149,37 @@ export default {
 
     loadWhiteboard(canvasData) {
       this.canvas.loadFromJSON(canvasData);
+      /*
+      this.canvas.forEachObject(object => { 
+       object.selectable = false; 
+      });*/
     },
+
     sendWhiteboardToServer(canvasData, userType) {
-      this.$socket.emit('sendBoard', {canvasData: canvasData, userType:'leader'});
+      if (this.userType == 'leader') {
+        this.$socket.emit('sendBoard', {canvasData: canvasData, userType:userType});
+      }
+      else {
+        if (this.board != 'questions') { 
+          this.$socket.emit('sendBoard', {canvasData: canvasData, userType:this.nickname});
+        }
+      }
+      
     },
     
   }/*,
   sockets: {
 
+    
+
   }*/,
   mounted() {
-    this.initialiseCanvas(this.board);
+    if (this.userType=='leader' || this.board=='working') {
+      this.initialiseInteractiveCanvas(this.board);
+    }
+    else {
+      this.initialiseStaticCanvas(this.board);
+    }
     
   }
 }

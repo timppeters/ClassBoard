@@ -97,13 +97,36 @@ io.on('connection', socket => {
 
     socket.on('sendBoard', data => {
       let pin = sockets[socket.id].room;
-      console.log(data.userType);
+      if (Object.keys(rooms).includes(pin)) {
+        if (data.userType == 'leader') {
+          rooms[pin]._leader._canvasHistory.push(rooms[pin]._leader.canvas);
+          rooms[pin]._leader.canvas = data.canvasData;
+          socket.to(pin).emit('updateBoard', data);
+        }
+        else {
+          rooms[pin]._users[data.userType]._canvasHistory.push(rooms[pin]._users[data.userType].canvas);
+          
+          rooms[pin]._users[data.userType].canvas = data.canvasData;
+        }
+      }
+    });
+
+    socket.on('undo', data => {
+      let pin = sockets[socket.id].room;
       if (data.userType == 'leader') {
-        rooms[pin]._leader.canvas = data.canvasData;
-        socket.to(pin).emit('updateBoard', data);
+        if (rooms[pin]._leader._canvasHistory.length != 0) {
+          let prev = rooms[pin]._leader._canvasHistory.pop();
+          rooms[pin]._leader.canvas = prev;
+          io.in(pin).emit('updateBoard', {canvasData:prev, userType:data.userType});
+        }
       }
       else {
-        rooms[pin]._users[data.userType].canvas = data.canvasData;
+        if (rooms[pin]._users[data.userType]._canvasHistory.length != 0) {
+          let prev = rooms[pin]._users[data.userType]._canvasHistory.pop();
+          rooms[pin]._users[data.userType].canvas = prev;
+          io.in(pin).emit('updateBoard', {canvasData:prev, userType:data.userType});
+        }
+
       }
     });
 

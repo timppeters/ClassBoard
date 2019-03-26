@@ -1,6 +1,6 @@
 import {fabric} from 'fabric';
 
-export const whiteboard_helper = {
+export const whiteboard_helper_interactive = {
     data() {
         return {
             points: [],
@@ -10,14 +10,11 @@ export const whiteboard_helper = {
         }
     },
     methods: {
-        initialiseCanvas(id) {
+      initialiseInteractiveCanvas(id) {
             
             this.canvas = this.init(id);
 
             this.listen();
-            
-            let text = new fabric.IText('hello world', { left: 400, top: 400});
-            let text2 = new fabric.IText('hello world2', { left: 620, top: 400});
         
             // Only let paths be selectable in a group (deselects them if they are selected by themselves)
             /*canvas.on('selection:created', e => {
@@ -27,15 +24,10 @@ export const whiteboard_helper = {
                 }
               } 
             });*/
-            
-          
-            // Set up event listeners
-          
-            this.canvas.add(text);
-            this.canvas.add(text2);
           },
 
         init(id) {
+          
 
             let canvas = new fabric.Canvas(id, {
                 rotationCursor: 'pointer',
@@ -104,6 +96,7 @@ export const whiteboard_helper = {
                 img.src = URLobj.createObjectURL(imageData);
                 fabric.Image.fromURL(img.src, img => {
                   canvas.add(img);
+                  canvas.trigger('object:created');
                   img.center();
                   this.selectedTool = 'select';
                 })
@@ -138,15 +131,15 @@ export const whiteboard_helper = {
               }
             });
 
-            canvas.on('object:modified', e => {
+            canvas.on('object:modified', () => {
               this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
             });
 
-            canvas.on('object:added', e => {
+            canvas.on('object:created', () => { // custom event to avoid firing when loadFromJSON is called
               this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
             });
 
-            canvas.on('object:removed', e => {
+            canvas.on('object:deleted', () => { // custom event for group deletion only sending canvas once
               this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
             });
             
@@ -183,6 +176,7 @@ export const whiteboard_helper = {
                             fill: this.tools.colour.selected
                           });
                           canvas.add(text);
+                          canvas.trigger('object:created');
                           this.selectedTool = 'select';
                           canvas.setActiveObject(text);
                         }
@@ -216,6 +210,7 @@ export const whiteboard_helper = {
                             strokeWidth: this.tools.pen.size*zoom
                           });
                           canvas.add(shape);
+                          canvas.trigger('object:created');
                           this.selectedTool = 'select';
                         }
                         else {
@@ -263,6 +258,7 @@ export const whiteboard_helper = {
                             fill: this.tools.colour.selected
                           });
                           canvas.add(text);
+                          canvas.trigger('object:created');
                           this.selectedTool = 'select';
                           canvas.setActiveObject(text);
                         }
@@ -296,6 +292,7 @@ export const whiteboard_helper = {
                             strokeWidth: this.tools.pen.size*zoom
                           });
                           canvas.add(shape);
+                          canvas.trigger('object:created');
                           this.selectedTool = 'select';
                         }
                         else {
@@ -615,6 +612,7 @@ export const whiteboard_helper = {
             
           });
           canvas.renderAll();
+          canvas.trigger('object:modified');
         },
 
         deleteObjects() {
@@ -629,6 +627,7 @@ export const whiteboard_helper = {
             });
             canvas.discardActiveObject();
           }
+          canvas.trigger('object:deleted');
         },
 
         uploadImageToCanvas(e) {
@@ -641,6 +640,7 @@ export const whiteboard_helper = {
                   let image = new fabric.Image(imgObj);
                   image.center();
                   canvas.add(image);
+                  canvas.trigger('object:created');
                   this.selectedTool = 'select';
               }
               
@@ -688,6 +688,7 @@ export const whiteboard_helper = {
           let path = this.createPath(pathData);
           canvas.clearContext(ctx);
           canvas.add(path);
+          canvas.trigger('object:created');
           canvas.renderAll();
           path.setCoords();
 

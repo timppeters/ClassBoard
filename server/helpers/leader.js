@@ -2,9 +2,10 @@ class Leader {
 
     constructor(socketId) {
         this._socketId = socketId;
-        this._canvas = {};
+        this._canvas = '{"version":"2.7.0","objects":[]}';
         this._room = '';
         this._screenDimensions = {};
+        this._canvasHistory = [];
 
     }
 

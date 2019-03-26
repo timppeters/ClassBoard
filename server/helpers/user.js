@@ -2,10 +2,11 @@ class User {
 
     constructor(socketId, nickname, room) {
         this._socketId = socketId;
-        this._canvas = {};
+        this._canvas = '{"version":"2.7.0","objects":[]}';
         this._nickname = nickname;
         this._room = room;
         this._screenDimensions = {};
+        this._canvasHistory = [];
 
     }
 
