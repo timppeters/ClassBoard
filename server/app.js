@@ -149,6 +149,11 @@ io.on('connection', socket => {
       }
     });
 
+    socket.on('submitBoard', data => {
+      let pin = sockets[socket.id].room;
+      io.to(`${rooms[pin]._leader.socketId}`).emit('submittedBoard', {nickname: data.nickname});
+    });
+
     socket.on('leave', data => { // make sure the socket leaves the socketio room
       socket.leave(data.pin);
     });

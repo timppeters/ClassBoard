@@ -12,8 +12,7 @@
 
       <div class="name" v-if="currentBoard!='user'">{{roomName}}</div>
       <div class="name" v-if="currentBoard=='user'">{{leader.selectedUserBoard}}</div>
-      <div class="button" v-bind:class="{ hide : userType=='leader' || currentBoard!='working'}" key="submit">submit</div>
-      <div class="button" v-bind:class="{ hide : (userType=='leader'&&currentBoard!='user') || userType=='user'}" key="mark">mark</div>
+      <div class="button" v-on:click="submitBoard()" v-bind:class="{ hide : userType=='leader' || currentBoard!='working' || user.submitted}" key="submit">submit</div>
     </div>
 
     <transition name="slide-left">
@@ -38,9 +37,9 @@
     <whiteboard id="questionsBoard" ref="questions" v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" v-bind:userType="userType" v-bind:nickname="nickname" key="questions"></whiteboard>
     <whiteboard id="workingBoard" ref="working" v-bind:class="{ selected : currentBoard == 'working'}" board="working" v-bind:userType="userType" v-bind:nickname="nickname" key="working"></whiteboard>
     <div class="users" ref="users" v-bind:class="{ selected : currentBoard == 'users'}">
-      <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value);"><span class='name'>{{value}}<span v-if="userType == 'leader'" v-on:click="kick(value)">&times;</span></span></div>
+      <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-bind:class="{ submitted: leader.submittedUsers.includes(value)}" v-on:click="openUserWhiteboard(value);"><span class='name'>{{value}}<span v-if="userType == 'leader'" v-on:click="kick(value)">&times;</span></span></div>
     </div>
-    <whiteboard id="leaderEditingUserBoard" ref="user" v-if="userType == 'leader' && currentBoard=='user'" v-bind:class="{selected : currentBoard=='user'}" v-bind:board="leader.selectedUserBoard" v-bind:userType="userType" v-bind:nickname="nickname" key="user"></whiteboard>
+    <whiteboard id="leaderEditingUserBoard" ref="user" v-if="userType == 'leader' && currentBoard=='user'" v-bind:class="{ selected : currentBoard=='user' }" v-bind:board="leader.selectedUserBoard" v-bind:userType="userType" v-bind:nickname="nickname" key="user"></whiteboard>
   </div>
 </template>
 
@@ -59,10 +58,11 @@ export default {
       currentBoard: 'questions',
       leader: {
         users: [],
-        selectedUserBoard: ''
+        selectedUserBoard: '',
+        submittedUsers: []
       },
       user: {
-
+        submitted: false
       }
     }
   },
@@ -106,6 +106,10 @@ export default {
 
     roomClosed() {
       location.reload();
+    },
+
+    submittedBoard(data) {
+      this.leader.submittedUsers.push(data.nickname);
     }
   },
   methods: {
@@ -141,6 +145,11 @@ export default {
 
     leaveOrClose() {
       location.reload();
+    },
+
+    submitBoard() {
+      this.$socket.emit('submitBoard', {nickname:this.nickname});
+      this.user.submitted = true;
     }
   },
   mounted() {
@@ -197,6 +206,14 @@ export default {
         border-radius: 0.5rem;
         box-shadow: 0px 1px 15px rgba(0,0,0,0.1);
         cursor: pointer;
+
+        &.submitted {
+          box-shadow: 0 0 0 5px #00B894;
+
+          &:hover {
+            box-shadow: 0 0 0 5px #00B894;
+          }
+        }
 
         &:hover {
           box-shadow: 0px 1px 15px rgba(0,0,0,0.3);

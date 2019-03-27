@@ -37,7 +37,6 @@
       <form id="nickname" v-if="inRoom && !inLobby && !createRoomScreen" v-on:submit.prevent="joinLobby(user.nickname, pin)">
         <div class="errorMessages">
           <div v-if="notifications.nicknameTaken">Nickname Taken</div>
-
         </div>
         <input type="text" v-model="user.nickname" placeholder="Nickname" v-validate.initial="'required|alpha_num|min:3|max:13'" name="nickname" required autocomplete="off" key="nickname">
         <button v-bind:class="{ disabled : errors.has('nickname') }">enter</button>
