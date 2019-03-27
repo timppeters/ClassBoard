@@ -4,8 +4,8 @@ class Leader {
         this._socketId = socketId;
         this._canvas = '{"version":"2.7.0","objects":[]}';
         this._room = '';
-        this._screenDimensions = {};
         this._canvasHistory = [];
+        this._editingUserBoard = '';
 
     }
 
@@ -29,12 +29,12 @@ class Leader {
         return this._socketId;
     }
 
-    set screenDimensions(dimensions) {
-        this._screenDimensions = dimensions;
+    set editingUserBoard(nickname) {
+        this._editingUserBoard = nickname;
     }
 
-    get screenDimensions() {
-        return this._screenDimensions;
+    get editingUserBoard() {
+        return this._editingUserBoard;
     }
 }
 

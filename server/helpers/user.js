@@ -5,7 +5,6 @@ class User {
         this._canvas = '{"version":"2.7.0","objects":[]}';
         this._nickname = nickname;
         this._room = room;
-        this._screenDimensions = {};
         this._canvasHistory = [];
 
     }
@@ -36,14 +35,6 @@ class User {
 
     get socketId() {
         return this._socketId;
-    }
-
-    set screenDimensions(dimensions) {
-        this._screenDimensions = dimensions;
-    }
-
-    get screenDimensions() {
-        return this._screenDimensions;
     }
 }
 

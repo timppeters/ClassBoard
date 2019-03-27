@@ -96,10 +96,16 @@ export default {
       }
       else if (tool == 'undo') {
         if (this.userType == 'leader') {
-          this.$socket.emit('undo', {userType:this.userType})
+          if (this.board == 'questions') {
+            this.$socket.emit('undo', {userType:this.userType});
+          }
+          else {
+            this.$socket.emit('undo', {userType:this.board});
+          }
+          
         }
-        else {
-          this.$socket.emit('undo', {userType:this.nickname})
+        else{
+          this.$socket.emit('undo', {userType:this.nickname});
         }
         
       }
@@ -157,7 +163,13 @@ export default {
 
     sendWhiteboardToServer(canvasData, userType) {
       if (this.userType == 'leader') {
-        this.$socket.emit('sendBoard', {canvasData: canvasData, userType:userType});
+        if (this.board == 'questions') {
+          this.$socket.emit('sendBoard', {canvasData: canvasData, userType:userType});
+        }
+        else {
+          this.$socket.emit('sendBoard', {canvasData: canvasData, userType:this.board});
+        }
+        
       }
       else {
         if (this.board != 'questions') { 
@@ -175,6 +187,7 @@ export default {
   }*/,
   mounted() {
     if (this.userType=='leader' || this.board=='working') {
+      console.log('interactive!');
       this.initialiseInteractiveCanvas(this.board);
     }
     else {

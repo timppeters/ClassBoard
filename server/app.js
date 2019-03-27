@@ -1,13 +1,17 @@
 const express = require('express');
 const app = express();
 
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
 const Leader = require('./helpers/leader.js');
 const User = require('./helpers/user.js');
 const Room = require('./helpers/room.js');
 const Log = require('./helpers/log.js');
+
+const errorHandler = require('errorhandler');
+
+app.use(errorHandler({ dumpExceptions: true, showStack: true })); 
 
 app.get('/', (req, res) => {
     res.send('This is the server.');
@@ -36,7 +40,6 @@ io.on('connection', socket => {
       }
 
       room._leader.room = room.pin;
-      room._leader.screenDimensions = {x: data.screenDimensions.x, y: data.screenDimensions.y};
       rooms[room.pin] = room;
       socket.join(room.pin);
       socket.emit('createdRoom', {pin: room.pin});
@@ -70,7 +73,6 @@ io.on('connection', socket => {
       }
       else {
         let user = new User(socket.id, data.nickname, data.pin);
-        user.screenDimensions = {x: data.screenDimensions.x, y: data.screenDimensions.y};
         rooms[data.pin].addUser(user);
         socket.emit('joinedLobby', {users: rooms[data.pin].usersNicknames});
         socket.to(data.pin).emit('userJoined', {user: data.nickname});
@@ -88,10 +90,11 @@ io.on('connection', socket => {
     });
 
     socket.on('kick', data => {
-      if (rooms[data.pin]._leader.socketId == socket.id) {
-        rooms[data.pin].removeUserByNickname(data.nickname);
-        io.in(data.pin).emit('userLeft', {user: data.nickname});
-        Log.magenta('User ' + data.nickname + ' kicked from room ' + data.pin);
+      let pin = sockets[socket.id].room;
+      if (rooms[pin]._leader.socketId == socket.id) {
+        rooms[pin].removeUserByNickname(data.nickname);
+        io.in(pin).emit('userLeft', {user: data.nickname});
+        Log.magenta('User ' + data.nickname + ' kicked from room ' + pin);
       }
     });
 
@@ -105,8 +108,16 @@ io.on('connection', socket => {
         }
         else {
           rooms[pin]._users[data.userType]._canvasHistory.push(rooms[pin]._users[data.userType].canvas);
-          
           rooms[pin]._users[data.userType].canvas = data.canvasData;
+          if (rooms[pin]._leader.editingUserBoard == data.userType) {
+            if (sockets[socket.id].leader) {
+              io.to(`${rooms[pin]._users[data.userType].socketId}`).emit('updateBoard', data);
+            }
+            else {
+              io.to(`${rooms[pin]._leader.socketId}`).emit('updateBoard', data);
+            }
+          }
+
         }
       }
     });
@@ -127,6 +138,14 @@ io.on('connection', socket => {
           io.in(pin).emit('updateBoard', {canvasData:prev, userType:data.userType});
         }
 
+      }
+    });
+
+    socket.on('requestWhiteboard', data => {
+      let pin = sockets[socket.id].room;
+      if (sockets[socket.id].leader) {
+        rooms[pin]._leader.editingUserBoard = data.nickname;
+        io.to(`${rooms[pin]._leader.socketId}`).emit('updateBoard', {canvasData: rooms[pin]._users[data.nickname].canvas, userType:data.nickname});
       }
     });
 

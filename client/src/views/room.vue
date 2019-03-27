@@ -1,14 +1,19 @@
 <template>
   <div class="room">
 
-    <div class="topbar" v-bind:class="{ small : userType=='leader'&&!currentBoard!='user'}">
-      <div class="sandwich" v-on:click="showMenu = !showMenu" >
+    <div class="topbar" v-bind:class="{ small : currentBoard=='questions'|| currentBoard=='users'}">
+      <div class="sandwich" v-on:click="showMenu = !showMenu" v-if="currentBoard!='user'">
         <div class="bar1"></div>
         <div class="bar2"></div>
         <div class="bar3"></div>
       </div>
-      <div class="name">{{roomName}}</div>
-      <div class="button" v-bind:class="{ hide : userType=='leader'&&!currentBoard!='user'}">submit</div>
+
+      <div class="backArrow" v-if="currentBoard=='user'" v-on:click="closeUserWhiteboard()"><img src="../assets/img/sidebar/back.svg"></div>
+
+      <div class="name" v-if="currentBoard!='user'">{{roomName}}</div>
+      <div class="name" v-if="currentBoard=='user'">{{leader.selectedUserBoard}}</div>
+      <div class="button" v-bind:class="{ hide : userType=='leader' || currentBoard!='working'}" key="submit">submit</div>
+      <div class="button" v-bind:class="{ hide : (userType=='leader'&&currentBoard!='user') || userType=='user'}" key="mark">mark</div>
     </div>
 
     <transition name="slide-left">
@@ -23,15 +28,19 @@
           <div class="link" v-bind:class="{selected : currentBoard=='questions'}" v-on:click="currentBoard='questions'">Questions</div>
           <div class="link" v-bind:class="{selected : currentBoard=='users'}" v-on:click="currentBoard='users';setUsersDivHeight()">Users</div>
         </div>
-        <div id="leave"><div>leave</div></div>
+        <div id="leave" v-on:click="leaveOrClose()">
+          <div v-if="userType == 'user'">leave</div>
+          <div v-if="userType == 'leader'">close room</div>
+          </div>
       </div>
     </transition>
 
-    <whiteboard ref="questions" v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" v-bind:userType="userType" v-bind:nickname="nickname" key="questions"></whiteboard>
-    <whiteboard ref="working" v-bind:class="{ selected : currentBoard == 'working'}" board="working" v-bind:userType="userType" v-bind:nickname="nickname" key="working"></whiteboard>
+    <whiteboard id="questionsBoard" ref="questions" v-bind:class="{ selected : currentBoard == 'questions'}" board="questions" v-bind:userType="userType" v-bind:nickname="nickname" key="questions"></whiteboard>
+    <whiteboard id="workingBoard" ref="working" v-bind:class="{ selected : currentBoard == 'working'}" board="working" v-bind:userType="userType" v-bind:nickname="nickname" key="working"></whiteboard>
     <div class="users" ref="users" v-bind:class="{ selected : currentBoard == 'users'}">
-      <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value);"><span class='name'>{{value}}</span></div>
+      <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-on:click="openUserWhiteboard(value);"><span class='name'>{{value}}<span v-if="userType == 'leader'" v-on:click="kick(value)">&times;</span></span></div>
     </div>
+    <whiteboard id="leaderEditingUserBoard" ref="user" v-if="userType == 'leader' && currentBoard=='user'" v-bind:class="{selected : currentBoard=='user'}" v-bind:board="leader.selectedUserBoard" v-bind:userType="userType" v-bind:nickname="nickname" key="user"></whiteboard>
   </div>
 </template>
 
@@ -49,7 +58,8 @@ export default {
       showMenu: false,
       currentBoard: 'questions',
       leader: {
-        users: []
+        users: [],
+        selectedUserBoard: ''
       },
       user: {
 
@@ -67,9 +77,14 @@ export default {
         }
       }
       else {
-        //load a users board
         if (data.userType == 'leader') {
           this.$refs.questions.loadWhiteboard(data.canvasData);
+        }
+        else {
+          //load user whiteboard
+          this.$refs.user.loadWhiteboard(data.canvasData);
+          
+
         }
 
       }
@@ -84,14 +99,26 @@ export default {
       else {
         let index = this.leader.users.indexOf(data.user);
         this.leader.users.splice(index, 1);
+        this.setUsersDivHeight();
       }
       
+    },
+
+    roomClosed() {
+      location.reload();
     }
   },
   methods: {
-    openUserWhiteboard(user) {
-      console.log(user);
+    openUserWhiteboard(nickname) {
+      this.$socket.emit('requestWhiteboard', {nickname: nickname});
+      this.currentBoard = 'user';
+      this.leader.selectedUserBoard = nickname;
       
+    },
+
+    closeUserWhiteboard() {
+      this.currentBoard = 'users';
+      this.selectedUserBoard = '';
     },
 
 
@@ -106,6 +133,14 @@ export default {
 
     remToPixels(rem) {
       return (rem * parseFloat(getComputedStyle(document.documentElement).fontSize));
+    },
+
+    kick(nickname) {
+      this.$socket.emit('kick', {nickname: nickname});
+    },
+
+    leaveOrClose() {
+      location.reload();
     }
   },
   mounted() {
@@ -130,6 +165,10 @@ export default {
 
   .whiteboard {
     display: none;
+
+    &#leaderEditingUserBoard {
+      z-index:1;
+    }
 
     &.selected {
       display: initial;
@@ -164,10 +203,22 @@ export default {
         }
       }
 
-      span {
+      .name {
         margin-top: 0.5rem;
         font-size: 1.7rem;
         font-weight: 600;
+
+        &:hover {
+
+          span {
+            margin-left: 1rem;
+            display: inline;
+            cursor: pointer;
+          }
+        }
+        span {
+          display: none;
+        }
       }
     }
     
@@ -183,7 +234,7 @@ export default {
     border-radius: 0.5rem;
     box-shadow: 0px 1px 15px rgba(0,0,0,0.3);
     padding: 10px;
-    z-index: 1;
+    z-index: 2;
 
     &.small {
       grid-template-columns: 1fr 5fr;
@@ -205,6 +256,15 @@ export default {
       }
       
       
+    }
+
+    .backArrow {
+      margin: auto 0 0 0;
+      cursor: pointer;
+
+      img {
+        height: 2rem;
+      }
     }
 
     .name {
@@ -246,7 +306,7 @@ export default {
     height: 100%;
     box-shadow: 0px 1px 15px rgba(0,0,0,0.3);
     padding: 0.2rem;
-    z-index: 1;
+    z-index: 3;
 
     #close {
       grid-row: 1/1;

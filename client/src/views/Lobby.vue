@@ -59,7 +59,7 @@
 
       </div>
       <div class="users" ref="users" v-bind:class="lobbyColour">
-        <div class="user" v-for="(value, key) in users" :key="key">{{value}}<span v-if="userType == 'leader'" v-on:click="kick(value, pin)">&times;</span></div>
+        <div class="user" v-for="(value, key) in users" :key="key">{{value}}<span v-if="userType == 'leader'" v-on:click="kick(value)">&times;</span></div>
 
       </div>
 
@@ -204,14 +204,7 @@ export default {
     joinLobby(nickname, pin) {
       this.$validator.validateAll().then((result) => {
         if (result) {
-          this.$socket.emit('joinLobby', {
-            nickname: nickname,
-            pin: pin,
-            screenDimensions: {
-              x: window.innerWidth,
-              y: window.innerHeight
-            }
-            });
+          this.$socket.emit('joinLobby', { nickname: nickname, pin: pin });
         }
       });
     },
@@ -219,19 +212,13 @@ export default {
     createRoom(roomName) {
       this.$validator.validateAll().then((result) => {
         if (result) {
-          this.$socket.emit('createRoom', {
-            roomName: roomName,
-            screenDimensions: {
-              x: window.innerWidth,
-              y: window.innerHeight
-            }
-            });
+          this.$socket.emit('createRoom', { roomName: roomName });
         }
       });
     },
 
-    kick(nickname, pin) {
-      this.$socket.emit('kick', {pin: pin, nickname: nickname})
+    kick(nickname) {
+      this.$socket.emit('kick', {nickname: nickname})
     },
 
     startRoom(pin) {
@@ -261,7 +248,6 @@ export default {
 
 <style lang="scss" scoped>
 
-$showClose: none;
 $blue: hsl(215, 92%, 61%);
 $orange: hsl(41, 100%, 50%);
 
@@ -486,7 +472,6 @@ $orange: hsl(41, 100%, 50%);
         padding: 3rem;
 
         &:hover {
-          $showClose: block;
 
           span {
             margin-left: 1rem;
