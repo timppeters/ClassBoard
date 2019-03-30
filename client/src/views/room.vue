@@ -100,6 +100,7 @@ export default {
         let index = this.leader.users.indexOf(data.user);
         this.leader.users.splice(index, 1);
         this.setUsersDivHeight();
+        this.closeUserWhiteboard()
       }
       
     },

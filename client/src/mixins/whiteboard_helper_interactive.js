@@ -127,6 +127,7 @@ export const whiteboard_helper_interactive = {
               if (this.selectedTool == 'eraser') {
                 if (this.mouseDown) {
                     canvas.remove(e.target);
+                    canvas.trigger('object:deleted');
                 }
               }
             });

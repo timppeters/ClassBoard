@@ -187,7 +187,6 @@ export default {
   }*/,
   mounted() {
     if (this.userType=='leader' || this.board=='working') {
-      console.log('interactive!');
       this.initialiseInteractiveCanvas(this.board);
     }
     else {
@@ -259,7 +258,7 @@ export default {
       top: 8rem;
       grid-template-columns: 1fr 1fr 1fr 1fr;
       grid-template-rows: 1fr 1fr 2fr;
-      row-gap: 40%;
+      grid-row-gap: 40%;
       padding: 1rem 1rem 1rem 0;
       
 
