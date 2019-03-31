@@ -59,7 +59,6 @@ export default {
         colour: {
           selected: 'black',
           colours: ['black', 'blue', 'red', 'green', 'yellow', 'orange', 'purple'],
-          //colours: ['#000000', '#065ea5', '#a50606', '#f77f00', '#f7de00', '#0c9627', '#8a0b96'], -- not in same order
           showOptions: false
           
         },
@@ -111,6 +110,7 @@ export default {
       }
     },
 
+    // Some tools are just buttons, so don't select them
     selectTool(tool) {
       if (tool != 'colour' && tool != 'extra' && tool != 'delete' && tool != 'undo') {
         this.selectedTool = tool;
@@ -120,8 +120,8 @@ export default {
     showToolOptions(tool) {
       this.hideToolOptions(); // close all other tool option menus
       if (['pen','colour','shape','extra'].includes(tool)) { // If tool has options menu
-        this.tools[tool].showOptions = true;
-         // Show options menu
+        this.tools[tool].showOptions = true; // Show options menu
+         
       }
     },
 
@@ -155,10 +155,6 @@ export default {
 
     loadWhiteboard(canvasData) {
       this.canvas.loadFromJSON(canvasData);
-      /*
-      this.canvas.forEachObject(object => { 
-       object.selectable = false; 
-      });*/
     },
 
     sendWhiteboardToServer(canvasData, userType) {
@@ -179,17 +175,12 @@ export default {
       
     },
     
-  }/*,
-  sockets: {
-
-    
-
-  }*/,
+  },
   mounted() {
     if (this.userType=='leader' || this.board=='working') {
       this.initialiseInteractiveCanvas(this.board);
     }
-    else {
+    else { // Don't let users edit the leader's board
       this.initialiseStaticCanvas(this.board);
     }
     
@@ -197,7 +188,7 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
+
 <style scoped lang="scss">
 
 .whiteboard {

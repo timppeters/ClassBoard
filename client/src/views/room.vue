@@ -106,6 +106,7 @@ export default {
     },
 
     roomClosed() {
+      this.$socket.emit('leave',{pin: this.pin});
       location.reload();
     },
 
@@ -114,6 +115,7 @@ export default {
     }
   },
   methods: {
+    // Leader opens a user's whiteboard
     openUserWhiteboard(nickname) {
       this.$socket.emit('requestWhiteboard', {nickname: nickname});
       this.currentBoard = 'user';
@@ -127,6 +129,7 @@ export default {
     },
 
 
+    // Need to set the height of the div specifically, due the the overflow: auto property.
     setUsersDivHeight() {
       this.$nextTick( () => {
         let heightOfDiv = this.$refs.users.clientHeight;
@@ -154,10 +157,10 @@ export default {
     }
   },
   mounted() {
+    // If someone tries to connect directly to /room, it redirects them to the home page
     if (this.roomName == undefined || this.userType == undefined) {
       this.$router.replace({ name: 'lobby'});
     }
-    this.$socket.emit('initialiseBoards');
     this.leader.users = this.users;
   }
 }

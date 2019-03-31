@@ -11,7 +11,7 @@ export const whiteboard_helper_static = {
 
         initStatic(id) {
           
-
+            // Initialise fabric canvas object
             let canvas = new fabric.Canvas(id, {
                 rotationCursor: 'pointer',
                 backgroundVpt: false,
@@ -24,7 +24,6 @@ export const whiteboard_helper_static = {
                 oldPinchZoomDistance: 0
               });
 
-              //load from json
 
             return canvas;
 
@@ -86,13 +85,13 @@ export const whiteboard_helper_static = {
                 }
               }
               else { // touch (dragging)
-                for (let i = 0; i < canvas.touches.length; i++) { // Update canvas.touches
+                for (let i = 0; i < canvas.touches.length; i++) { //loop through fingers and update the correct one
                   if (canvas.touches[i].pointerId == e.pointerId) {
                     canvas.touches[i] = e;
                   }
                 }
                 if (canvas.touches.length == 2) {
-                  this.pinchZoom(); //loop through fingers and update the correct one
+                  this.pinchZoom(); 
                 }
                 if (canvas.isDragging) {
                   canvas.viewportTransform[4] += canvas.touches[0].clientX - canvas.lastPosX;

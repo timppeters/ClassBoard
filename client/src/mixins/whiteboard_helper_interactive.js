@@ -16,19 +16,11 @@ export const whiteboard_helper_interactive = {
 
             this.listen();
         
-            // Only let paths be selectable in a group (deselects them if they are selected by themselves)
-            /*canvas.on('selection:created', e => {
-              if (e.selected.length == 1) {
-                if (canvas.getActiveObject().get('type') == 'path') {
-                  canvas.discardActiveObject(); 
-                }
-              } 
-            });*/
           },
 
         init(id) {
           
-
+            // Initialuse fabric canvas object
             let canvas = new fabric.Canvas(id, {
                 rotationCursor: 'pointer',
                 backgroundVpt: false,
@@ -41,7 +33,6 @@ export const whiteboard_helper_interactive = {
                 oldPinchZoomDistance: 0
               });
 
-              //load from json
 
         
             // Set default object settings
@@ -54,11 +45,13 @@ export const whiteboard_helper_interactive = {
                 borderDashArray: [2, 2]
             });
         
+            // Set default Path object settings
             fabric.Path.prototype.set({
               hoverCursor: 'default',
               perPixelTargetFind: true
             });
 
+            // Add dragging property to Point object
             fabric.Point.prototype.dragging = false;
 
             return canvas;
@@ -72,6 +65,8 @@ export const whiteboard_helper_interactive = {
                 let event = options.e;
                 let delta = event.deltaY/300; // How much the mouse has scrolled divided by arbitrary '300' to decrease the zoom speed
                 let zoom = canvas.getZoom() - delta;
+
+                // Give zoom boundaries (min & max zoom)
                 if (zoom > 20) {
                     zoom = 20;
                 } 
@@ -132,6 +127,7 @@ export const whiteboard_helper_interactive = {
               }
             });
 
+            // Send the whiteboard to the server when an object is updated
             canvas.on('object:modified', () => {
               this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
             });
@@ -140,7 +136,7 @@ export const whiteboard_helper_interactive = {
               this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
             });
 
-            canvas.on('object:deleted', () => { // custom event for group deletion only sending canvas once
+            canvas.on('object:deleted', () => { // custom event for group deletion only sending whiteboard data once
               this.sendWhiteboardToServer(JSON.stringify(this.canvas), this.userType)
             });
             
@@ -163,7 +159,7 @@ export const whiteboard_helper_interactive = {
                         }
                         else if (this.selectedTool == 'eraser') {
                           canvas.selection = false;
-                          this.makeObjectsUnselectable();
+                          this.makeObjectsUnselectable(); // Don't allow object selection with eraser tool
                           this.mouseDown = true;
                         }
                         else if (this.selectedTool == 'text') {
@@ -222,11 +218,11 @@ export const whiteboard_helper_interactive = {
                     else if (e.button == 5) { // eraser button/end of stylus
                         this.mouseDown = true;
                         canvas.selection = false;
-                        this.makeObjectsUnselectable();
+                        this.makeObjectsUnselectable(); // Don't allow object selection with eraser tool
                         this.selectedTool = 'eraser';
                     }
-                    else { // barrel button
-                      // Selection box -- switch to selection tool
+                    else { // other buttons
+                      // Selection box
                     }
                     
                   }
@@ -235,7 +231,7 @@ export const whiteboard_helper_interactive = {
                       if (e.button == 0) {
                         this.mouseDown = true;
                         if (this.selectedTool == 'pen') {
-                          this.makeObjectsUnselectable();
+                          this.makeObjectsUnselectable(); // Don't allow object selection when drawing
                           canvas.selection = false;
                           this.scaleDrawingCanvas();
     
@@ -245,7 +241,7 @@ export const whiteboard_helper_interactive = {
                           this.addPoint(cursorPos.x, cursorPos.y, false);
                         }
                         else if (this.selectedTool == 'eraser') {
-                          this.makeObjectsUnselectable();
+                          this.makeObjectsUnselectable(); // Don't allow object selection with eraser tool
                           canvas.selection = false;
                         }
                         else if (this.selectedTool == 'text') {
@@ -301,7 +297,7 @@ export const whiteboard_helper_interactive = {
                         }
                       }
                     }
-                    else {// alt key pressed
+                    else {// alt key pressed, allow dragging
                       canvas.isDragging = true;
                       canvas.selection = false;
                       canvas.lastPosX = e.clientX;
@@ -312,7 +308,7 @@ export const whiteboard_helper_interactive = {
                   else { // touch (dragging)
                     canvas.touches.push(e); // register a finger
                     if (canvas.touches.length == 2) {
-                      this.setInitialPinchZoomDistance();
+                      this.setInitialPinchZoomDistance(); // Calcualte the initial distance between the fingers
                     }
                     if (canvas.getActiveObjects().length == 0) { // Allow using touch to move selected items
                       canvas.isDragging = true;
@@ -332,23 +328,14 @@ export const whiteboard_helper_interactive = {
                     let cursorPos = this.getCursorPos(e);
                     this.addPoint(cursorPos.x, cursorPos.y, true);
                   }
-                  else { 
-                    //
-                  }
                 }
                 
               }
               else if (e.pointerType == 'mouse') {
                 if (this.mouseDown) {
                   if (this.selectedTool == 'pen') {
-                      //send drawing command to socket
-                      // pen or eraser
                       let cursorPos = this.getCursorPos(e);
                       this.addPoint(cursorPos.x, cursorPos.y, true);
-                  }
-                  else { 
-                    //
-
                   }
                 }
                 if (e.altKey && canvas.isDragging && this.selectedTool != 'pen') {
@@ -360,13 +347,13 @@ export const whiteboard_helper_interactive = {
                 }
               }
               else { // touch (dragging)
-                for (let i = 0; i < canvas.touches.length; i++) { // Update canvas.touches
-                  if (canvas.touches[i].pointerId == e.pointerId) {
+                for (let i = 0; i < canvas.touches.length; i++) { //loop through fingers and update the correct one
+                  if (canvas.touches[i].pointerId == e.pointerId) { 
                     canvas.touches[i] = e;
                   }
                 }
                 if (canvas.touches.length == 2) {
-                  this.pinchZoom(); //loop through fingers and update the correct one
+                  this.pinchZoom();
                 }
                 if (canvas.isDragging) {
                   canvas.viewportTransform[4] += canvas.touches[0].clientX - canvas.lastPosX;
@@ -421,7 +408,7 @@ export const whiteboard_helper_interactive = {
                 }
 
 
-                if(canvas.isDragging) {
+                if(canvas.isDragging) { // mouse dragging
                   canvas.isDragging = false;
                   canvas.forEachObject(function(obj) { // reset the coner coordinates after panning so that objects are still selectable
                     obj.setCoords();
@@ -435,7 +422,7 @@ export const whiteboard_helper_interactive = {
                     obj.setCoords();
                   });
                 }
-                for (let i = 0; i < canvas.touches.length; i++) {
+                for (let i = 0; i < canvas.touches.length; i++) { // Remove the specific finger
                   if (canvas.touches[i].pointerId == e.pointerId) {
                     canvas.touches.splice(i,1);
                   }
@@ -445,42 +432,42 @@ export const whiteboard_helper_interactive = {
 
         },
 
-        draw() {
-                let ctx = this.canvas.contextTop;
-                let length = this.points.length;
-                let dot = this.points[length-1];
-                let prevDot;
-                if (length > 1) {
-                  prevDot = this.points[length-2];
-                }
-                
-                ctx.beginPath();
-    
-                if (dot.dragging) {
-    
-                    let midpoint = this.getMidpoint(dot, prevDot);
-                    this.roundPixels(prevDot);
-                    this.roundPixels(dot);
-    
-                    ctx.moveTo(this.prevMidpoint.x, this.prevMidpoint.y);
-                    ctx.quadraticCurveTo(prevDot.x, prevDot.y, midpoint.x, midpoint.y);
-                    this.prevMidpoint = midpoint;
-                }
-                else { //first point
-                    ctx.moveTo(dot.x - 1, dot.y);
-                    ctx.lineTo(dot.x, dot.y);
-                    this.prevMidpoint = {
-                        x: dot.x -1,
-                        y: dot.y
-                    }
-                }
-    
-                ctx.lineCap = 'round';
-                ctx.lineJoin= 'round';
-                ctx.strokeStyle = this.tools.colour.selected;
-                ctx.lineWidth = this.tools.pen.size;
-                ctx.stroke();
-                ctx.closePath();
+        draw() { // Drawing function, draws line.
+          let ctx = this.canvas.contextTop;
+          let length = this.points.length;
+          let dot = this.points[length-1];
+          let prevDot;
+          if (length > 1) {
+            prevDot = this.points[length-2];
+          }
+          
+          ctx.beginPath();
+
+          if (dot.dragging) {
+
+              let midpoint = this.getMidpoint(dot, prevDot);
+              this.roundPixels(prevDot);
+              this.roundPixels(dot);
+
+              ctx.moveTo(this.prevMidpoint.x, this.prevMidpoint.y);
+              ctx.quadraticCurveTo(prevDot.x, prevDot.y, midpoint.x, midpoint.y);
+              this.prevMidpoint = midpoint;
+          }
+          else { //first point
+              ctx.moveTo(dot.x - 1, dot.y);
+              ctx.lineTo(dot.x, dot.y);
+              this.prevMidpoint = {
+                  x: dot.x -1,
+                  y: dot.y
+              }
+          }
+
+          ctx.lineCap = 'round';
+          ctx.lineJoin= 'round';
+          ctx.strokeStyle = this.tools.colour.selected;
+          ctx.lineWidth = this.tools.pen.size;
+          ctx.stroke();
+          ctx.closePath();
     
         },
     
@@ -500,10 +487,9 @@ export const whiteboard_helper_interactive = {
 
           canvas.upperCanvasEl.setAttribute('width', canvas.width);
           canvas.upperCanvasEl.setAttribute('height', canvas.height);
-
-          //ctx.scale(-devicePixelRatio, -devicePixelRatio); -- hides selection box?
       },
 
+      // Calculate the initial distance between two fingers, to be able to calucate distance difference later on
       setInitialPinchZoomDistance() {
         let canvas = this.canvas;
         let distance = Math.hypot(canvas.touches[0].pageX - canvas.touches[1].pageX, canvas.touches[0].pageY - canvas.touches[1].pageY);
@@ -514,8 +500,9 @@ export const whiteboard_helper_interactive = {
         let canvas = this.canvas;
         let midpoint = this.getMidpoint(canvas.touches[0], canvas.touches[1]);
         let distance = Math.hypot(canvas.touches[0].pageX - canvas.touches[1].pageX, canvas.touches[0].pageY - canvas.touches[1].pageY);
-        let delta = (canvas.oldPinchZoomDistance - distance)/200; // Distance between fingers divided by arbitrary '300' to decrease the zoom speed
+        let delta = (canvas.oldPinchZoomDistance - distance)/200; // Distance between fingers divided by arbitrary '200' to decrease the zoom speed
         let zoom = canvas.getZoom() - delta;
+        // Zoom limits
         if (zoom > 20) {
             zoom = 20;
         } 
@@ -555,8 +542,8 @@ export const whiteboard_helper_interactive = {
             let mouseX, mouseY;
 
             if (event.pointerType == 'mouse' || event.pointerType == 'pen') {
-                mouseX = event.pageX;// - canvas.viewportTransform[4];
-                mouseY = event.pageY;// - canvas.viewportTransform[5];
+                mouseX = event.pageX;
+                mouseY = event.pageY;
             }
             else { // touch
                 mouseX = event.touches[0].clientX;
@@ -618,6 +605,7 @@ export const whiteboard_helper_interactive = {
 
         deleteObjects() {
           let canvas = this.canvas;
+          // Clear the whole canvas if no objects selected
           if (canvas.getActiveObjects() == 0) {
             canvas.clear();
             canvas.setZoom(1);
@@ -649,7 +637,8 @@ export const whiteboard_helper_interactive = {
           reader.readAsDataURL(e.target.files[0]);
         },
 
-        adjustPointsforDrag() { // Changes the coordinates to adjust for the dragging of the canvas so the svg will be put in the correct location
+        // Changes the coordinates to adjust for the dragging of the canvas so the svg will be put in the correct location
+        adjustPointsforDrag() { 
           let canvas = this.canvas;
           let length = this.points.length;
           for (let i = 0; i < length; i++) {
@@ -659,6 +648,7 @@ export const whiteboard_helper_interactive = {
 
         },
 
+        // Changes the coordinates to adjust for the zoom of the canvas so the svg will be put in the correct location
         adjustPointsforZoom() {
           let canvas = this.canvas;
           let ctx = canvas.contextTop;
@@ -671,17 +661,15 @@ export const whiteboard_helper_interactive = {
           }
         },
 
+        // Convert the line points to an SVG and add it to the canvas
         finalisePath() {
           let canvas = this.canvas;
           let ctx = canvas.contextTop;
           this.adjustPointsforDrag();
           this.adjustPointsforZoom()
           let pathData = fabric.PencilBrush.prototype.convertPointsToSVGPath(this.points).join('');
+          // Zero length zero height paths cause errors
           if (pathData === 'M 0 0 Q 0 0 0 0 L 0 0') {
-            // do not create 0 width/height paths, as they are
-            // rendered inconsistently across browsers
-            // Firefox 4, for example, renders a dot,
-            // whereas Chrome 10 renders nothing
             canvas.requestRenderAll();
             return;
           }
@@ -698,6 +686,7 @@ export const whiteboard_helper_interactive = {
           canvas.trigger('path:created', { path: path });
         },
 
+        // Create a fabric path object from the svg path
         createPath(pathData) {
           let canvas = this.canvas;
           let path = new fabric.Path(pathData, {

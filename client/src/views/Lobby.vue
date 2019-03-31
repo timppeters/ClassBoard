@@ -98,18 +98,21 @@ export default {
     }
   },
   sockets: {
+
+    // Successfully joined room
     joinedRoom(data) {
       this.inRoom = true;
       this.roomName = data.roomName;
-
     },
 
+    // Successfully joined lobby
     joinedLobby(data) {
       this.inLobby = true;
       this.users = data.users;
       this.setUsersDivHeight();
     },
 
+    // Successfully created room
     createdRoom(data) {
       this.userType = 'leader';
       this.inRoom = true;
@@ -119,11 +122,13 @@ export default {
 
     },
 
+    // User joined
     userJoined(data) {
       this.users.push(data.user);
 
     },
 
+    // User left; if user is this client, leave lobby/room
     userLeft(data) {
       if (data.user == this.user.nickname) {
         this.$socket.emit('leave',{pin: this.pin});
@@ -161,7 +166,6 @@ export default {
 
     roomClosed() {
       this.$socket.emit('leave',{pin: this.pin});
-
       this.roomName = '';
       this.pin = '';
       this.user.nickname = '';
@@ -224,6 +228,7 @@ export default {
       this.$socket.emit('startRoom', {pin: pin})
     },
 
+    // Need to set the height of the div specifically, due the the overflow: auto property.
     setUsersDivHeight() {
       let height = window.innerHeight * 0.75;
       this.$nextTick( () => {
@@ -233,10 +238,8 @@ export default {
     },
 
   },
-  mounted() {
-    
-  },
   computed: {
+    // Choose a random colour for the lobby background
     lobbyColour() {
       let lobbyColours = ['blue','red','pink','green','purple','orange','cyan'];
       return lobbyColours[Math.floor(Math.random() * lobbyColours.length)];

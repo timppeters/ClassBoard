@@ -13,11 +13,10 @@ Vue.use(new socketio({
   connection: `${hostname}:3000`
 }));
 
+// For from validation
 Vue.use(VeeValidate);
 
 new Vue({
   router,
   render: h => h(App)
 }).$mount('#app')
-
-console.log();

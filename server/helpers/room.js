@@ -1,5 +1,3 @@
-const fabric = require('fabric').fabric;
-
 class Room {
 
     constructor(name, leader) {
@@ -65,7 +63,6 @@ class Room {
         return false;
     }
 
-    //Remove user by nickname function
     removeUserByNickname(nickname) {
         if (this._users[nickname] != undefined) {
             delete this._users[nickname];
