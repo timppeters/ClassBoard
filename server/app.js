@@ -63,7 +63,7 @@ io.on('connection', socket => {
 
       // Add room object to rooms, add socket to socket.io room (The room's PIN is the name of the socket.io room)
       // Emit 'createdRoom' event to the socket that requested to create the room
-      room._leader.room = room.pin;
+      room.leader.room = room.pin;
       rooms[room.pin] = room;
       socket.join(room.pin);
       socket.emit('createdRoom', {pin: room.pin});
@@ -115,7 +115,7 @@ io.on('connection', socket => {
     // Leader socket requests to start the room
     socket.on('startRoom', data => {
       // Only leader can start the room
-      if (rooms[data.pin]._leader.socketId == socket.id) {
+      if (rooms[data.pin].leader.socketId == socket.id) {
         rooms[data.pin].started = true;
         io.in(data.pin).emit('roomStarted');
         Log.cyan('Room ' + data.pin + ' started');
@@ -126,7 +126,7 @@ io.on('connection', socket => {
     // Leader socket kicks a user from the room
     socket.on('kick', data => {
       let pin = sockets[socket.id].room;
-      if (rooms[pin]._leader.socketId == socket.id) {
+      if (rooms[pin].leader.socketId == socket.id) {
         rooms[pin].removeUserByNickname(data.nickname);
         io.in(pin).emit('userLeft', {user: data.nickname});
         Log.magenta('User ' + data.nickname + ' kicked from room ' + pin);
@@ -140,9 +140,9 @@ io.on('connection', socket => {
         // If the leader updated their whiteboard
         if (data.userType == 'leader') {
           // Add the old whiteboard data to the canvasHistory array (for undo feature)
-          rooms[pin]._leader._canvasHistory.push(rooms[pin]._leader.canvas);
+          rooms[pin].leader.canvasHistory.push(rooms[pin].leader.canvas);
           // Update the leader object
-          rooms[pin]._leader.canvas = data.canvasData;
+          rooms[pin].leader.canvas = data.canvasData;
           // Send the new whiteboard data to all users in the room
           socket.to(pin).emit('updateBoard', data);
         }
@@ -150,12 +150,12 @@ io.on('connection', socket => {
         // If a user's whiteboard is updated (could be done by user or by the leader) (the data.userType is the user's nickname in this case)
         else {
           // Add old whiteboard data to the canvasHistory array (for undo feature)
-          rooms[pin]._users[data.userType]._canvasHistory.push(rooms[pin]._users[data.userType].canvas);
+          rooms[pin]._users[data.userType].canvasHistory.push(rooms[pin]._users[data.userType].canvas);
           // Update user object
           rooms[pin]._users[data.userType].canvas = data.canvasData;
 
           // If the leader is editing the user's board
-          if (rooms[pin]._leader.editingUserBoard == data.userType) {
+          if (rooms[pin].leader.editingUserBoard == data.userType) {
 
             // If the leader just updated the board, send the whiteboard data to the specific user
             if (sockets[socket.id].leader) {
@@ -163,7 +163,7 @@ io.on('connection', socket => {
             }
             // If the user just updated the board, send the whiteboard data to the leader
             else {
-              io.to(`${rooms[pin]._leader.socketId}`).emit('updateBoard', data);
+              io.to(`${rooms[pin].leader.socketId}`).emit('updateBoard', data);
             }
           }
 
@@ -176,17 +176,17 @@ io.on('connection', socket => {
       let pin = sockets[socket.id].room;
       // If it is the leader's whiteboard, pop canvasHistory and send that data
       if (data.userType == 'leader') {
-        if (rooms[pin]._leader._canvasHistory.length != 0) {
-          let prev = rooms[pin]._leader._canvasHistory.pop();
-          rooms[pin]._leader.canvas = prev;
+        if (rooms[pin].leader.canvasHistory.length != 0) {
+          let prev = rooms[pin].leader.canvasHistory.pop();
+          rooms[pin].leader.canvas = prev;
           io.in(pin).emit('updateBoard', {canvasData:prev, userType:data.userType});
         }
       }
 
       // If it is a user's whiteboard, pop canvasHistory and send that data
       else {
-        if (rooms[pin]._users[data.userType]._canvasHistory.length != 0) {
-          let prev = rooms[pin]._users[data.userType]._canvasHistory.pop();
+        if (rooms[pin]._users[data.userType].canvasHistory.length != 0) {
+          let prev = rooms[pin]._users[data.userType].canvasHistory.pop();
           rooms[pin]._users[data.userType].canvas = prev;
           io.in(pin).emit('updateBoard', {canvasData:prev, userType:data.userType});
         }
@@ -198,15 +198,21 @@ io.on('connection', socket => {
     socket.on('requestWhiteboard', data => {
       let pin = sockets[socket.id].room;
       if (sockets[socket.id].leader) {
-        rooms[pin]._leader.editingUserBoard = data.nickname;
-        io.to(`${rooms[pin]._leader.socketId}`).emit('updateBoard', {canvasData: rooms[pin]._users[data.nickname].canvas, userType:data.nickname});
+        rooms[pin].leader.editingUserBoard = data.nickname;
+        io.to(`${rooms[pin].leader.socketId}`).emit('updateBoard', {canvasData: rooms[pin]._users[data.nickname].canvas, userType:data.nickname});
       }
     });
 
     // Socket submits their board to alert the leader they are done
     socket.on('submitBoard', data => {
       let pin = sockets[socket.id].room;
-      io.to(`${rooms[pin]._leader.socketId}`).emit('submittedBoard', {nickname: data.nickname});
+      io.to(`${rooms[pin].leader.socketId}`).emit('submittedBoard', {nickname: data.nickname});
+    });
+
+    // Leader marks a student's board, send the mark to the student
+    socket.on('markBoard', data => {
+      let pin = sockets[socket.id].room;
+      io.to(`${rooms[pin]._users[data.nickname].socketId}`).emit('markedBoard', {mark: data.mark, nickname: data.nickname});
     });
 
     // Make sure the socket leaves the socket.io room (can't force a socket to leave a room from the server)

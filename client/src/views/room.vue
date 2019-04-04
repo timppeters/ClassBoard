@@ -1,7 +1,7 @@
 <template>
   <div class="room">
 
-    <div class="topbar" v-bind:class="{ small : currentBoard=='questions'|| currentBoard=='users'}">
+    <div class="topbar" v-bind:class="topbarSize">
       <div class="sandwich" v-on:click="showMenu = !showMenu" v-if="currentBoard!='user'">
         <div class="bar1"></div>
         <div class="bar2"></div>
@@ -13,6 +13,8 @@
       <div class="name" v-if="currentBoard!='user'">{{roomName}}</div>
       <div class="name" v-if="currentBoard=='user'">{{leader.selectedUserBoard}}</div>
       <div class="button" v-on:click="submitBoard()" v-bind:class="{ hide : userType=='leader' || currentBoard!='working' || user.submitted}" key="submit">submit</div>
+      <div class="button" v-on:click="markBoard('correct')" v-if="userType=='leader'" v-bind:class="{ hide : currentBoard!='user' || !leader.submittedUsers.includes(leader.selectedUserBoard) || leader.markedUsers.includes(leader.selectedUserBoard)}" key="markCorrect">correct</div>
+      <div class="button" v-on:click="markBoard('wrong')" v-if="userType=='leader'" v-bind:class="{ hide : currentBoard!='user' || !leader.submittedUsers.includes(leader.selectedUserBoard) || leader.markedUsers.includes(leader.selectedUserBoard)}" key="markWrong">wong</div>
     </div>
 
     <transition name="slide-left">
@@ -40,6 +42,9 @@
       <div class="user" v-for="(value, key) in leader.users" :key="key"><img src="../assets/img/student.png" v-bind:class="{ submitted: leader.submittedUsers.includes(value)}" v-on:click="openUserWhiteboard(value);"><span class='name'>{{value}}<span v-if="userType == 'leader'" v-on:click="kick(value)">&times;</span></span></div>
     </div>
     <whiteboard id="leaderEditingUserBoard" ref="user" v-if="userType == 'leader' && currentBoard=='user'" v-bind:class="{ selected : currentBoard=='user' }" v-bind:board="leader.selectedUserBoard" v-bind:userType="userType" v-bind:nickname="nickname" key="user"></whiteboard>
+    <div class="markNotification" v-if="leader.markedUsers.includes(this.nickname)" v-bind:class="{correct : user.mark == 'correct'}">
+      <div>Mark: {{user.mark}}</div>
+    </div>
   </div>
 </template>
 
@@ -59,10 +64,12 @@ export default {
       leader: {
         users: [],
         selectedUserBoard: '',
-        submittedUsers: []
+        submittedUsers: [],
+        markedUsers: []
       },
       user: {
-        submitted: false
+        submitted: false,
+        mark: ''
       }
     }
   },
@@ -111,7 +118,14 @@ export default {
     },
 
     submittedBoard(data) {
+      this.user.mark = data.mark;
       this.leader.submittedUsers.push(data.nickname);
+    },
+
+    // This event only gets sent to the user who's board was marked, so we can push their nickname and it won't appear twice in the array
+    markedBoard(data) {
+      this.user.mark = data.mark;
+      this.leader.markedUsers.push(data.nickname);
     }
   },
   methods: {
@@ -154,6 +168,11 @@ export default {
     submitBoard() {
       this.$socket.emit('submitBoard', {nickname:this.nickname});
       this.user.submitted = true;
+    },
+
+    markBoard(correctOrNot) {
+      this.$socket.emit('markBoard', {nickname: this.leader.selectedUserBoard, mark: correctOrNot});
+      this.leader.markedUsers.push(this.leader.selectedUserBoard);
     }
   },
   mounted() {
@@ -162,6 +181,16 @@ export default {
       this.$router.replace({ name: 'lobby'});
     }
     this.leader.users = this.users;
+  },
+  computed: {
+    topbarSize() {
+      if (this.currentBoard=='questions'|| this.currentBoard=='users') {
+        return ('small');
+      }
+      if (this.currentBoard=='user' && this.leader.submittedUsers.includes(this.leader.selectedUserBoard) && !this.leader.markedUsers.includes(this.leader.selectedUserBoard)) {
+        return ('extraBig');
+      }
+    }
   }
 }
 </script>
@@ -259,6 +288,10 @@ export default {
 
     &.small {
       grid-template-columns: 1fr 5fr;
+    }
+
+    &.extraBig {
+      grid-template-columns: 1fr 5fr 5fr 5fr;
     }
 
     div {
@@ -404,6 +437,23 @@ export default {
         }
 
       }
+    }
+  }
+  .markNotification {
+    padding: 1rem;
+    background: #FF7675;
+    position: absolute;
+    top: 2rem;
+    right: 20rem;
+    border-radius: 0.5rem;
+    color: white;
+
+    &.correct {
+      background: #00B894;
+    }
+
+    div {
+      font-size: 1.4rem;
     }
   }
 }

@@ -38,6 +38,10 @@ class Room {
         return this._started;
     }
 
+    get leader() {
+        return this._leader;
+    }
+
     nicknameTaken(nickname) {
         if (Object.keys(this._users).includes(nickname)) {
             return true;

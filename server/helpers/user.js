@@ -36,6 +36,14 @@ class User {
     get socketId() {
         return this._socketId;
     }
+
+    get canvasHistory() {
+        return this._canvasHistory;
+    }
+
+    set canvasHistory(canvasHistory) {
+        this._canvasHistory = canvasHistory;
+    }
 }
 
 module.exports = User;

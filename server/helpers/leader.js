@@ -36,6 +36,14 @@ class Leader {
     get editingUserBoard() {
         return this._editingUserBoard;
     }
+
+    get canvasHistory() {
+        return this._canvasHistory;
+    }
+
+    set canvasHistory(canvasHistory) {
+        this._canvasHistory = canvasHistory;
+    }
 }
 
 module.exports = Leader;
