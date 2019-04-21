@@ -21,9 +21,11 @@ export const whiteboard_helper_static = {
                 stopContextMenu: true,
                 enableRetinaScaling: true,
                 touches: [],
-                oldPinchZoomDistance: 0
+                oldPinchZoomDistance: 0,
+                selection: false
               });
 
+            fabric.Object.prototype.selectable = false;
 
             return canvas;
 

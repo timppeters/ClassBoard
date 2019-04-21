@@ -14,7 +14,7 @@
       <div class="name" v-if="currentBoard=='user'">{{leader.selectedUserBoard}}</div>
       <div class="button" v-on:click="submitBoard()" v-bind:class="{ hide : userType=='leader' || currentBoard!='working' || user.submitted}" key="submit">submit</div>
       <div class="button" v-on:click="markBoard('correct')" v-if="userType=='leader'" v-bind:class="{ hide : currentBoard!='user' || !leader.submittedUsers.includes(leader.selectedUserBoard) || leader.markedUsers.includes(leader.selectedUserBoard)}" key="markCorrect">correct</div>
-      <div class="button" v-on:click="markBoard('wrong')" v-if="userType=='leader'" v-bind:class="{ hide : currentBoard!='user' || !leader.submittedUsers.includes(leader.selectedUserBoard) || leader.markedUsers.includes(leader.selectedUserBoard)}" key="markWrong">wong</div>
+      <div class="button wrong" v-on:click="markBoard('wrong')" v-if="userType=='leader'" v-bind:class="{ hide : currentBoard!='user' || !leader.submittedUsers.includes(leader.selectedUserBoard) || leader.markedUsers.includes(leader.selectedUserBoard)}" key="markWrong">wong</div>
     </div>
 
     <transition name="slide-left">
@@ -345,6 +345,10 @@ export default {
 
       &.hide {
         display: none;
+      }
+
+      &.wrong {
+        background-color: #FF7675;
       }
     }
   }

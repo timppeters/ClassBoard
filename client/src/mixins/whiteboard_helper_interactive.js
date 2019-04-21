@@ -20,7 +20,7 @@ export const whiteboard_helper_interactive = {
 
         init(id) {
           
-            // Initialuse fabric canvas object
+            // Initialise fabric canvas object
             let canvas = new fabric.Canvas(id, {
                 rotationCursor: 'pointer',
                 backgroundVpt: false,
@@ -666,7 +666,7 @@ export const whiteboard_helper_interactive = {
           let canvas = this.canvas;
           let ctx = canvas.contextTop;
           this.adjustPointsforDrag();
-          this.adjustPointsforZoom()
+          this.adjustPointsforZoom();
           let pathData = fabric.PencilBrush.prototype.convertPointsToSVGPath(this.points).join('');
           // Zero length zero height paths cause errors
           if (pathData === 'M 0 0 Q 0 0 0 0 L 0 0') {

@@ -188,7 +188,14 @@ io.on('connection', socket => {
         if (rooms[pin]._users[data.userType].canvasHistory.length != 0) {
           let prev = rooms[pin]._users[data.userType].canvasHistory.pop();
           rooms[pin]._users[data.userType].canvas = prev;
-          io.in(pin).emit('updateBoard', {canvasData:prev, userType:data.userType});
+          io.to(`${rooms[pin]._users[data.userType].socketId}`).emit('updateBoard', {canvasData:prev, userType:data.userType});
+          // If the leader is editing the user's whiteboard, send the whiteboard data to the leader too
+          if (rooms[pin].leader.editingUserBoard == data.userType) {
+            io.to(`${rooms[pin].leader.socketId}`).emit('updateBoard', {canvasData:prev, userType:data.userType});
+          }
+
+
+
         }
 
       }
