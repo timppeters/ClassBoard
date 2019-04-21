@@ -23,10 +23,10 @@
         <div id="title">Whiteboards</div>
         <div class="links" id="links-user" v-if="userType == 'user'">
           <div class="link" v-bind:class="{selected : currentBoard=='questions'}" v-on:click="currentBoard='questions'">Questions</div>
-          <div class="link" v-bind:class="{selected : currentBoard=='working'}" v-on:click="currentBoard='working'">Working</div>
+          <div class="link" v-bind:class="{selected : currentBoard=='working'}" v-on:click="currentBoard='working'">My Whiteboard</div>
         </div>
         <div class="links" id="links-leader" v-if="userType == 'leader'">
-          <div class="link" v-bind:class="{selected : currentBoard=='questions'}" v-on:click="currentBoard='questions'">Questions</div>
+          <div class="link" v-bind:class="{selected : currentBoard=='questions'}" v-on:click="currentBoard='questions'">My Whiteboard</div>
           <div class="link" v-bind:class="{selected : currentBoard=='users'}" v-on:click="currentBoard='users';setUsersDivHeight()">Users</div>
         </div>
         <div id="leave" v-on:click="leaveOrClose()">
