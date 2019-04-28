@@ -686,7 +686,7 @@ export const whiteboard_helper_interactive = {
           canvas.trigger('path:created', { path: path });
         },
 
-        // Create a fabric path object from the svg path
+        // Create a fabric path object from the svg path data
         createPath(pathData) {
           let canvas = this.canvas;
           let path = new fabric.Path(pathData, {

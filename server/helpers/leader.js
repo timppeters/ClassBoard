@@ -1,10 +1,10 @@
 class Leader {
 
-    constructor(socketId) {
+    constructor(socketId, undoStack) {
         this._socketId = socketId;
         this._canvas = '{"version":"2.7.0","objects":[]}';
         this._room = '';
-        this._canvasHistory = [];
+        this._canvasHistory = undoStack;
         this._editingUserBoard = '';
 
     }

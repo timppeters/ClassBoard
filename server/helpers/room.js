@@ -43,7 +43,7 @@ class Room {
     }
 
     nicknameTaken(nickname) {
-        if (Object.keys(this._users).includes(nickname)) {
+        if (this._users[nickname] != undefined) {
             return true;
         }
         return false;
@@ -82,10 +82,6 @@ class Room {
             }
         });
 
-    }
-
-    getUserSocketID(nickname) {
-        return this._users[nickname].socketId;
     }
 
     getSocketIds() {

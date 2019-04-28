@@ -16,6 +16,7 @@ const Leader = require('./helpers/leader.js');
 const User = require('./helpers/user.js');
 const Room = require('./helpers/room.js');
 const Log = require('./helpers/log.js');
+const Stack = require('./helpers/stack.js');
 
 const errorHandler = require('errorhandler');
 
@@ -54,10 +55,10 @@ io.on('connection', socket => {
     socket.on('createRoom', data => {
 
       // Create a new room instance, making the current socket the leader
-      let room = new Room(data.roomName, new Leader(socket.id));
+      let room = new Room(data.roomName, new Leader(socket.id, new Stack()));
 
       // Generate a unique pin for the room
-      while (Object.keys(rooms).includes(room.pin)) {
+      while (rooms[room.pin] != undefined) {
         room.generatePin();
       }
 
@@ -77,7 +78,7 @@ io.on('connection', socket => {
     // Socket requests to join a room
     socket.on('joinRoom', data => {
       // If room exists
-      if (Object.keys(rooms).includes(data.pin)) {
+      if (rooms[data.pin] != undefined) {
         // If room hasn't started
         if(!rooms[data.pin].started) {
           // Add socket to room
@@ -104,7 +105,7 @@ io.on('connection', socket => {
       }
       else {
         // Create a new User instance, add to room, emit userJoined event to the whole room
-        let user = new User(socket.id, data.nickname, data.pin);
+        let user = new User(socket.id, data.nickname, data.pin, new Stack());
         rooms[data.pin].addUser(user);
         socket.emit('joinedLobby', {users: rooms[data.pin].usersNicknames});
         socket.to(data.pin).emit('userJoined', {user: data.nickname});
@@ -136,10 +137,10 @@ io.on('connection', socket => {
     // When a socket sends their whiteboard to the server
     socket.on('sendBoard', data => {
       let pin = sockets[socket.id].room;
-      if (Object.keys(rooms).includes(pin)) {
+      if (rooms[pin] != undefined) {
         // If the leader updated their whiteboard
         if (data.userType == 'leader') {
-          // Add the old whiteboard data to the canvasHistory array (for undo feature)
+          // Add the old whiteboard data to the canvasHistory stack (for undo feature)
           rooms[pin].leader.canvasHistory.push(rooms[pin].leader.canvas);
           // Update the leader object
           rooms[pin].leader.canvas = data.canvasData;
@@ -149,7 +150,7 @@ io.on('connection', socket => {
         
         // If a user's whiteboard is updated (could be done by user or by the leader) (the data.userType is the user's nickname in this case)
         else {
-          // Add old whiteboard data to the canvasHistory array (for undo feature)
+          // Add old whiteboard data to the canvasHistory stack (for undo feature)
           rooms[pin]._users[data.userType].canvasHistory.push(rooms[pin]._users[data.userType].canvas);
           // Update user object
           rooms[pin]._users[data.userType].canvas = data.canvasData;
@@ -176,7 +177,7 @@ io.on('connection', socket => {
       let pin = sockets[socket.id].room;
       // If it is the leader's whiteboard, pop canvasHistory and send that data
       if (data.userType == 'leader') {
-        if (rooms[pin].leader.canvasHistory.length != 0) {
+        if (!rooms[pin].leader.canvasHistory.isEmpty()) {
           let prev = rooms[pin].leader.canvasHistory.pop();
           rooms[pin].leader.canvas = prev;
           io.in(pin).emit('updateBoard', {canvasData:prev, userType:data.userType});
@@ -185,7 +186,7 @@ io.on('connection', socket => {
 
       // If it is a user's whiteboard, pop canvasHistory and send that data
       else {
-        if (rooms[pin]._users[data.userType].canvasHistory.length != 0) {
+        if (!rooms[pin]._users[data.userType].canvasHistory.isEmpty()) {
           let prev = rooms[pin]._users[data.userType].canvasHistory.pop();
           rooms[pin]._users[data.userType].canvas = prev;
           io.to(`${rooms[pin]._users[data.userType].socketId}`).emit('updateBoard', {canvasData:prev, userType:data.userType});
