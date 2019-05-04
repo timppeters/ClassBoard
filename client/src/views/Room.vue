@@ -100,14 +100,17 @@ export default {
 
     userLeft(data) {
       if (data.user == this.nickname) {
-        this.$socket.emit('leave',{pin: this.pin});
         location.reload();
       }
       else {
-        let index = this.leader.users.indexOf(data.user);
-        this.leader.users.splice(index, 1);
-        this.setUsersDivHeight();
-        this.closeUserWhiteboard()
+        if (this.userType == 'leader') {
+          let index = this.leader.users.indexOf(data.user);
+          if (index != -1) {
+            this.leader.users.splice(index, 1);
+            this.setUsersDivHeight();
+            this.closeUserWhiteboard();
+          }
+        }
       }
       
     },

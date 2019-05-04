@@ -241,8 +241,8 @@ io.on('connection', socket => {
         }
         // If the socket was a user in a room, remove them from the room and alert everyone in the room
         else {
-          rooms[pin].removeUserBySocketId(socket.id);
           let nickname = rooms[pin].getUserNickname(socket.id);
+          rooms[pin].removeUserBySocketId(socket.id);
           socket.to(pin).emit('userLeft', {user: nickname});
           Log.magenta('User ' + nickname + ' left room ' + pin);
         }

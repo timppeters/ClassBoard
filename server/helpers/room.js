@@ -76,11 +76,14 @@ class Room {
     }
 
     getUserNickname(socketId) {
+        let found;
         Object.keys(this._users).forEach( nickname => {
             if (this._users[nickname].socketId == socketId) {
-                return nickname;
+                found = nickname;
             }
         });
+
+        return found;
 
     }
 
